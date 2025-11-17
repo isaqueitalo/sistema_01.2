@@ -585,21 +585,6 @@ class PDVController:
             ),
         )
 
-        carrinho_container = ft.Container(
-            bgcolor=SURFACE,
-            border_radius=12,
-            padding=12,
-            height=200,
-            content=ft.Column(
-                controls=[
-                    ft.Text("Itens no carrinho", weight=ft.FontWeight.BOLD),
-                    ft.Container(self.carrinho_list, expand=True),
-                ],
-                spacing=6,
-                expand=True,
-            ),
-        )
-
         layout = ft.ResponsiveRow(
             controls=[
                 ft.Container(
@@ -608,7 +593,7 @@ class PDVController:
                 ),
                 ft.Container(
                     ft.Column(
-                        [carrinho_container, pagamentos, resumo, ultima],
+                        [pagamentos, resumo, ultima],
                         spacing=12,
                     ),
                     col={"xs": 12, "lg": 4},

@@ -244,3 +244,24 @@
 2025-11-17 10:14:40 [INFO] sistema_logger :: Aplicação iniciada.
 2025-11-17 10:14:49 [INFO] sistema_logger :: Usuário admin autenticado
 2025-11-17 10:14:49 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 15:53:43 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 15:53:49 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 15:53:49 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 15:53:49 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T18:53:49.529123
+2025-11-17 15:53:49 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 15:53:49 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 15:53:58 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 15:53:58 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 15:56:52 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 15:56:56 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 15:56:56 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 15:56:56 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T18:56:56.311991
+2025-11-17 15:56:56 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 15:56:56 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 15:57:06 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 15:57:06 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 15:57:27 [INFO] sistema_logger :: Venda VENDA-20251117185727-7959691E registrada com 1 itens.
+2025-11-17 15:58:21 [INFO] sistema_logger :: Venda VENDA-20251117185821-FFD57EBC registrada com 1 itens.
+2025-11-17 15:58:53 [INFO] sistema_logger :: Venda VENDA-20251117185853-E5ED0D47 registrada com 1 itens.
+2025-11-17 16:00:26 [INFO] sistema_logger :: Cadastrando produto pastel de carne
+2025-11-17 16:00:56 [INFO] sistema_logger :: Venda VENDA-20251117190056-E9404173 registrada com 1 itens.
