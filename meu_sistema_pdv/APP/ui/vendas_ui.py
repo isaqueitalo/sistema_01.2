@@ -1,0 +1,591 @@
+from __future__ import annotations
+
+from typing import List, Optional
+
+import flet as ft
+
+from APP.core.logger import get_logger
+from APP.core.security import can_access
+from APP.core.session import session
+from APP.core.utils import format_currency
+from APP.models import (
+    caixa_models,
+    clientes_models,
+    produtos_models,
+    vendas_models,
+)
+
+from .style import (
+    PRIMARY_COLOR,
+    SECONDARY_COLOR,
+    SURFACE,
+    SUCCESS_COLOR,
+    WARNING_COLOR,
+)
+
+PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
+    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+    color={ft.MaterialState.DEFAULT: "white"},
+)
+SECONDARY_BUTTON_STYLE = ft.ButtonStyle(
+    bgcolor={ft.MaterialState.DEFAULT: SECONDARY_COLOR},
+    color={ft.MaterialState.DEFAULT: "white"},
+)
+
+logger = get_logger()
+
+
+class PDVController:
+    def __init__(self, page: ft.Page, on_back) -> None:
+        self.page = page
+        self.on_back = on_back
+        self.carrinho: List[dict] = []
+        self.ultima_venda: Optional[dict] = None
+        self.busca_field = ft.TextField(
+            label="Código de barras ou nome",
+            autofocus=True,
+            border_radius=12,
+            on_submit=lambda _: self.adicionar_item(),
+            on_change=lambda e: self.atualizar_sugestoes(),
+        )
+        self.sugestoes_lista = ft.Column(spacing=0)
+        self.sugestoes_container = ft.Container(
+            content=self.sugestoes_lista,
+            bgcolor=SURFACE,
+            border_radius=8,
+            visible=False,
+            padding=0,
+        )
+        self.carrinho_list = ft.ListView(
+            spacing=4,
+            padding=0,
+            height=220,
+            auto_scroll=True,
+        )
+        self.quantidade_field = ft.TextField(
+            label="Qtd",
+            width=120,
+            value="1",
+            on_submit=lambda _: self.adicionar_item(),
+        )
+        self.desconto_field = ft.TextField(
+            label="Desconto (%)",
+            width=150,
+            value="0",
+            on_change=lambda _: self.atualizar_resumo(),
+        )
+        self.pagamento_dropdown = ft.Dropdown(
+            label="Forma de pagamento (F9)",
+            value="Dinheiro",
+            options=[ft.dropdown.Option(p) for p in vendas_models.FORMAS_PAGAMENTO],
+            border_radius=12,
+        )
+        self.cliente_dropdown = ft.Dropdown(
+            label="Cliente (F7)",
+            border_radius=12,
+        )
+        self._carregar_clientes()
+
+        self.tabela = ft.DataTable(
+            bgcolor=SURFACE,
+            border_radius=12,
+            column_spacing=12,
+            columns=[
+                ft.DataColumn(ft.Text("Produto")),
+                ft.DataColumn(ft.Text("Qtd")),
+                ft.DataColumn(ft.Text("Preço")),
+                ft.DataColumn(ft.Text("Total")),
+                ft.DataColumn(ft.Text("Ações")),
+            ],
+            rows=[],
+        )
+        self.subtotal_text = ft.Text("R$ 0,00", size=20, weight=ft.FontWeight.BOLD)
+        self.desconto_text = ft.Text("R$ 0,00", color=WARNING_COLOR)
+        self.total_text = ft.Text("R$ 0,00", size=24, weight=ft.FontWeight.BOLD)
+        self.ultima_text = ft.Text("Nenhuma venda ainda.", color="white70")
+        self.atualizar_lista_carrinho()
+
+    def _carregar_clientes(self):
+        clientes = clientes_models.listar_clientes()
+        self.cliente_dropdown.options = [
+            ft.dropdown.Option(str(c["id"]), c["nome"]) for c in clientes
+        ]
+        consumidor = next((c for c in clientes if c["nome"] == "Consumidor Final"), None)
+        if consumidor:
+            self.cliente_dropdown.value = str(consumidor["id"])
+
+    def _mostrar_alerta(self, mensagem: str, color: str = WARNING_COLOR):
+        self.page.snack_bar = ft.SnackBar(ft.Text(mensagem), bgcolor=color)
+        self.page.snack_bar.open = True
+        self.page.update()
+
+    def _produto_por_busca(self, texto: str):
+        texto = texto.strip()
+        if not texto:
+            return None
+        produto = produtos_models.buscar_por_codigo(texto)
+        if produto:
+            return produto
+        return produtos_models.buscar_por_nome(texto)
+
+    def atualizar_sugestoes(self):
+        texto = (self.busca_field.value or "").strip()
+        if len(texto) < 2:
+            self.ocultar_sugestoes()
+            return
+        resultados = produtos_models.buscar_sugestoes(texto, limite=6)
+        if not resultados:
+            self.ocultar_sugestoes()
+            return
+
+        def _make_tile(produto):
+            return ft.ListTile(
+                title=ft.Text(produto["nome"]),
+                subtitle=ft.Text(
+                    f"Cód: {produto['codigo_barras'] or '-'} • R$ {produto['preco_venda']:.2f}"
+                ),
+                on_click=lambda e, p=produto: self.selecionar_sugestao(p),
+                dense=True,
+            )
+
+        self.sugestoes_lista.controls = [_make_tile(prod) for prod in resultados]
+        self.sugestoes_container.visible = True
+        self.page.update()
+
+    def selecionar_sugestao(self, produto):
+        self.busca_field.value = produto["codigo_barras"] or produto["nome"]
+        self.ocultar_sugestoes()
+
+    def ocultar_sugestoes(self):
+        if self.sugestoes_container.visible:
+            self.sugestoes_container.visible = False
+            self.page.update()
+
+    def atualizar_lista_carrinho(self):
+        if not self.carrinho:
+            self.carrinho_list.controls = [
+                ft.Text("Nenhum produto no carrinho.", color="white70")
+            ]
+        else:
+            itens = []
+            for item in self.carrinho:
+                itens.append(
+                    ft.ListTile(
+                        title=ft.Text(item["nome"]),
+                        subtitle=ft.Text(
+                            f"Qtd: {item['quantidade']:.2f} x {format_currency(item['preco_unitario'])}"
+                        ),
+                        trailing=ft.Text(
+                            format_currency(item["quantidade"] * item["preco_unitario"])
+                        ),
+                        dense=True,
+                    )
+                )
+            self.carrinho_list.controls = itens
+
+    def adicionar_item(self):
+        produto = self._produto_por_busca(self.busca_field.value or "")
+        if not produto:
+            self._mostrar_alerta("Produto não encontrado.", color=WARNING_COLOR)
+            return
+        try:
+            quantidade = float(self.quantidade_field.value or "1")
+        except ValueError:
+            quantidade = 1
+        existente = next(
+            (item for item in self.carrinho if item["produto_id"] == produto["id"]),
+            None,
+        )
+        if existente:
+            existente["quantidade"] += quantidade
+        else:
+            self.carrinho.append(
+                {
+                    "produto_id": produto["id"],
+                    "nome": produto["nome"],
+                    "preco_unitario": produto["preco_venda"],
+                    "quantidade": quantidade,
+                }
+            )
+        self.busca_field.value = ""
+        self.quantidade_field.value = "1"
+        self.ocultar_sugestoes()
+        self.atualizar_tabela()
+        self.atualizar_resumo()
+
+    def atualizar_tabela(self):
+        linhas = []
+        for idx, item in enumerate(self.carrinho):
+            linhas.append(
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(ft.Text(item["nome"])),
+                        ft.DataCell(
+                            ft.Row(
+                                controls=[
+                                    ft.IconButton(
+                                        ft.icons.REMOVE,
+                                        on_click=lambda e, i=idx: self.ajustar_quantidade(
+                                            i, -1
+                                        ),
+                                        icon_size=18,
+                                    ),
+                                    ft.Text(f"{item['quantidade']:.2f}"),
+                                    ft.IconButton(
+                                        ft.icons.ADD,
+                                        on_click=lambda e, i=idx: self.ajustar_quantidade(
+                                            i, 1
+                                        ),
+                                        icon_size=18,
+                                    ),
+                                ]
+                            )
+                        ),
+                        ft.DataCell(ft.Text(format_currency(item["preco_unitario"]))),
+                        ft.DataCell(
+                            ft.Text(
+                                format_currency(
+                                    item["quantidade"] * item["preco_unitario"]
+                                )
+                            )
+                        ),
+                        ft.DataCell(
+                            ft.IconButton(
+                                ft.icons.DELETE_FOREVER,
+                                on_click=lambda e, i=idx: self.remover_item(i),
+                                icon_color=WARNING_COLOR,
+                            )
+                        ),
+                    ]
+                )
+            )
+        self.tabela.rows = linhas
+        self.atualizar_lista_carrinho()
+        self.page.update()
+
+    def ajustar_quantidade(self, index: int, delta: float):
+        if index >= len(self.carrinho):
+            return
+        self.carrinho[index]["quantidade"] = max(
+            0.01, self.carrinho[index]["quantidade"] + delta
+        )
+        self.atualizar_tabela()
+        self.atualizar_resumo()
+
+    def remover_item(self, index: int):
+        if index < len(self.carrinho):
+            self.carrinho.pop(index)
+            self.atualizar_tabela()
+            self.atualizar_resumo()
+
+    def atualizar_resumo(self):
+        subtotal = sum(item["quantidade"] * item["preco_unitario"] for item in self.carrinho)
+        try:
+            desconto_perc = float(self.desconto_field.value or "0")
+        except ValueError:
+            desconto_perc = 0
+        desconto = subtotal * (desconto_perc / 100)
+        total = subtotal - desconto
+        self.subtotal_text.value = format_currency(subtotal)
+        self.desconto_text.value = f"- {format_currency(desconto)}"
+        self.total_text.value = format_currency(max(total, 0))
+        self.page.update()
+
+    def alterar_preco_ultimo(self):
+        if not self.carrinho:
+            return
+        ultimo = self.carrinho[-1]
+        dialog = ft.AlertDialog(modal=True)
+
+        novo_preco = ft.TextField(
+            label="Novo preço",
+            value=str(ultimo["preco_unitario"]),
+            autofocus=True,
+        )
+
+        def salvar(_):
+            try:
+                ultimo["preco_unitario"] = float(novo_preco.value)
+            except ValueError:
+                pass
+            dialog.open = False
+            self.page.update()
+            self.atualizar_tabela()
+            self.atualizar_resumo()
+
+        def fechar(e=None):
+            dialog.open = False
+            self.page.update()
+
+        dialog.title = ft.Text(f"Ajustar preço de {ultimo['nome']}")
+        dialog.content = novo_preco
+        dialog.actions = [
+            ft.TextButton("Cancelar", on_click=fechar),
+            ft.FilledButton("Salvar", on_click=salvar, style=PRIMARY_BUTTON_STYLE),
+        ]
+
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
+
+    def finalizar_venda(self):
+        if not self.carrinho:
+            self._mostrar_alerta("Carrinho vazio.", color=WARNING_COLOR)
+            return
+
+        cliente_id = (
+            int(self.cliente_dropdown.value) if self.cliente_dropdown.value else None
+        )
+        try:
+            desconto = float(self.desconto_field.value or "0")
+        except ValueError:
+            desconto = 0
+        pagamentos = [
+            {
+                "forma": self.pagamento_dropdown.value or "Dinheiro",
+                "valor": sum(
+                    item["quantidade"] * item["preco_unitario"]
+                    for item in self.carrinho
+                )
+                * (1 - desconto / 100),
+            }
+        ]
+
+        resultado = vendas_models.registrar_venda(
+            self.carrinho,
+            usuario_id=session.user.id,
+            cliente_id=cliente_id,
+            desconto_percentual=desconto,
+            pagamentos=pagamentos,
+            forma_principal=self.pagamento_dropdown.value,
+        )
+        caixa = caixa_models.caixa_aberto(session.user.id)
+        if caixa:
+            caixa_models.registrar_movimento(
+                caixa["id"],
+                tipo="venda",
+                valor=resultado["total"],
+                forma_pagamento=pagamentos[0]["forma"],
+                venda_id=resultado["id"],
+            )
+        self.ultima_venda = resultado
+        self.carrinho = []
+        self.atualizar_tabela()
+        self.atualizar_resumo()
+        self.atualizar_ultima_venda_texto()
+        self.ocultar_sugestoes()
+        self._mostrar_alerta("Venda registrada com sucesso!", color=SUCCESS_COLOR)
+
+    def atualizar_ultima_venda_texto(self):
+        if not self.ultima_venda:
+            self.ultima_text.value = "Nenhuma venda ainda."
+        else:
+            itens_detalhe = "\n".join(
+                [
+                    f"- {item['nome']} x{item['quantidade']} = {format_currency(item['quantidade'] * item['preco_unitario'])}"
+                    for item in self.ultima_venda["itens"]
+                ]
+            )
+            self.ultima_text.value = (
+                f"Venda {self.ultima_venda['codigo']}\n"
+                f"Total: {format_currency(self.ultima_venda['total'])}\nItens:\n{itens_detalhe}"
+            )
+        self.page.update()
+
+    def limpar_carrinho(self):
+        self.carrinho = []
+        self.atualizar_tabela()
+        self.atualizar_resumo()
+
+    def atalhos(self, e: ft.KeyboardEvent):
+        mapa = {
+            "F2": lambda: self.busca_field.focus(),
+            "F3": self.adicionar_item,
+            "F4": lambda: self.quantidade_field.focus(),
+            "F5": self.alterar_preco_ultimo,
+            "F6": lambda: self.remover_item(len(self.carrinho) - 1),
+            "F7": lambda: self.cliente_dropdown.focus(),
+            "F8": self.finalizar_venda,
+            "F9": lambda: self.pagamento_dropdown.focus(),
+            "F10": lambda: self.desconto_field.focus(),
+            "F11": lambda: self.on_back("/dashboard"),
+        }
+        if e.key in mapa:
+            mapa[e.key]()
+
+    def build_view(self) -> ft.View:
+        cabecalho = ft.Row(
+            controls=[
+                ft.Text("PDV / Caixa", size=26, weight=ft.FontWeight.BOLD),
+                ft.FilledButton(
+                    "Voltar (F11)",
+                    icon=ft.icons.ARROW_BACK,
+                    on_click=lambda e: self.on_back("/dashboard"),
+                    style=PRIMARY_BUTTON_STYLE,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
+
+        captura = ft.Container(
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=16,
+            content=ft.Column(
+                controls=[
+                    ft.Text("Captura rápida (atalhos F2-F6)", color="white70"),
+                    ft.Row(
+                        controls=[
+                            self.busca_field,
+                            self.quantidade_field,
+                            ft.FilledButton(
+                                "Adicionar (F3)",
+                                icon=ft.icons.ADD_SHOPPING_CART,
+                                on_click=lambda e: self.adicionar_item(),
+                                style=PRIMARY_BUTTON_STYLE,
+                            ),
+                        ],
+                        spacing=10,
+                    ),
+                    self.sugestoes_container,
+                ]
+            ),
+        )
+
+        pagamentos = ft.Container(
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=16,
+            content=ft.Column(
+                controls=[
+                    ft.Text("Cliente e pagamento", color="white70"),
+                    ft.Row(
+                        controls=[
+                            self.cliente_dropdown,
+                            self.pagamento_dropdown,
+                            self.desconto_field,
+                        ],
+                        spacing=12,
+                    ),
+                    ft.Row(
+                        controls=[
+                            ft.FilledButton(
+                                "Finalizar venda (F8)",
+                                icon=ft.icons.CHECK_CIRCLE,
+                                on_click=lambda e: self.finalizar_venda(),
+                                style=SECONDARY_BUTTON_STYLE,
+                            ),
+                            ft.TextButton(
+                                "Limpar carrinho",
+                                on_click=lambda e: self.limpar_carrinho(),
+                            ),
+                        ],
+                        spacing=12,
+                    ),
+                ]
+            ),
+        )
+
+        resumo = ft.Container(
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=16,
+            content=ft.Column(
+                controls=[
+                    ft.Text("Resumo", size=18, weight=ft.FontWeight.BOLD),
+                    ft.Row(
+                        controls=[
+                            ft.Text("Subtotal", color="white54"),
+                            self.subtotal_text,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    ft.Row(
+                        controls=[ft.Text("Desconto", color="white54"), self.desconto_text],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    ft.Divider(),
+                    ft.Row(
+                        controls=[
+                            ft.Text("TOTAL", size=22, weight=ft.FontWeight.BOLD),
+                            self.total_text,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                ]
+            ),
+        )
+
+        ultima = ft.Container(
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=16,
+            content=ft.Column(
+                controls=[ft.Text("Última venda", weight=ft.FontWeight.BOLD), self.ultima_text],
+            ),
+        )
+
+        tabela_container = ft.Container(
+            content=self.tabela,
+            expand=True,
+            height=320,
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=8,
+        )
+
+        carrinho_container = ft.Container(
+            width=320,
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=16,
+            content=ft.Column(
+                controls=[ft.Text("Itens no carrinho", weight=ft.FontWeight.BOLD), self.carrinho_list],
+                spacing=10,
+            ),
+        )
+
+        conteudo = ft.Column(
+            controls=[
+                cabecalho,
+                captura,
+                ft.ResponsiveRow(
+                    controls=[
+                        ft.Container(tabela_container, col={"xs": 12, "lg": 8}),
+                        ft.Container(carrinho_container, col={"xs": 12, "lg": 4}),
+                    ],
+                    spacing=16,
+                    run_spacing=16,
+                ),
+                pagamentos,
+                ft.ResponsiveRow(
+                    controls=[
+                        ft.Container(resumo, col={"xs": 12, "lg": 6}),
+                        ft.Container(ultima, col={"xs": 12, "lg": 6}),
+                    ],
+                    spacing=16,
+                    run_spacing=16,
+                ),
+            ],
+            spacing=14,
+        )
+
+        self.page.on_keyboard_event = self.atalhos
+        return ft.View(
+            "/pdv",
+            controls=[ft.Container(conteudo, expand=True)],
+            scroll=ft.ScrollMode.AUTO,
+        )
+
+
+def build_pdv_view(page: ft.Page, on_back):
+    if not can_access("pdv"):
+        return ft.View(
+            "/pdv",
+            controls=[ft.Text("Você não tem permissão para o PDV.", color="red")],
+        )
+    controller = PDVController(page, on_back)
+    return controller.build_view()
+
+
+__all__ = ["build_pdv_view"]

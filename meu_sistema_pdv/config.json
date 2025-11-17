@@ -1,0 +1,19 @@
+﻿{
+  "app_name": "Meu Sistema PDV",
+  "database_path": "DATA/system.db",
+  "log_path": "DATA/system.log",
+  "backup_dir": "BACKUP",
+  "debug": true,
+  "theme": "dark",
+  "default_admin": {
+    "username": "admin",
+    "password": "admin123",
+    "role": "admin"
+  },
+  "company": {
+    "name": "Loja Modelo",
+    "cnpj": "00.000.000/0000-00",
+    "address": "Rua Principal, 123 - Centro",
+    "phone": "(11) 99999-0000"
+  }
+}
