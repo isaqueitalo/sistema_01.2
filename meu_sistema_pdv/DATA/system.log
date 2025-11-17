@@ -110,3 +110,137 @@
 2025-11-16 22:59:08 [INFO] sistema_logger :: Login bem-sucedido para admin
 2025-11-16 23:00:02 [INFO] sistema_logger :: Venda VENDA-20251117020002-1EE4E827 registrada com 2 itens.
 2025-11-16 23:03:40 [INFO] sistema_logger :: Venda VENDA-20251117020340-80BF7B1C registrada com 3 itens.
+2025-11-17 08:03:37 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 08:03:42 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 08:03:42 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 08:03:42 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T11:03:42.363941
+2025-11-17 08:03:42 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 08:03:42 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 08:03:51 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 08:03:51 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 08:09:05 [INFO] sistema_logger :: Cadastrando produto coxinha de carne
+2025-11-17 08:09:41 [INFO] sistema_logger :: Cadastrando produto coca cola zero
+2025-11-17 08:11:20 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 08:11:24 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 08:11:25 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 08:11:25 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T11:11:25.003635
+2025-11-17 08:11:25 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 08:11:25 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 08:11:33 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 08:11:33 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 08:23:27 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 08:23:37 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 08:23:37 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 08:23:37 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T11:23:37.444146
+2025-11-17 08:23:37 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 08:23:37 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 08:23:52 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 08:23:52 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 08:39:22 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 08:39:26 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 08:39:26 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 08:39:26 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T11:39:26.648218
+2025-11-17 08:39:26 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 08:39:26 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 08:39:34 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 08:39:34 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 08:53:48 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 08:53:54 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 08:53:54 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 08:53:54 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T11:53:54.593645
+2025-11-17 08:53:54 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 08:53:54 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 08:54:01 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 08:54:01 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 09:00:52 [INFO] sistema_logger :: Caixa CX-20251117120052-BA9E2E8A aberto por usuário 1
+2025-11-17 09:01:05 [INFO] sistema_logger :: Caixa 1 fechado.
+2025-11-17 09:01:20 [INFO] sistema_logger :: Caixa CX-20251117120120-5F0AD487 aberto por usuário 1
+2025-11-17 09:01:42 [INFO] sistema_logger :: Venda VENDA-20251117120142-135F4E11 registrada com 2 itens.
+2025-11-17 09:01:56 [INFO] sistema_logger :: Caixa 2 fechado.
+2025-11-17 09:02:33 [INFO] sistema_logger :: Caixa CX-20251117120232-2CEB4D59 aberto por usuário 1
+2025-11-17 09:02:44 [INFO] sistema_logger :: Venda VENDA-20251117120244-5AC5CBB7 registrada com 1 itens.
+2025-11-17 09:02:52 [INFO] sistema_logger :: Venda VENDA-20251117120252-89FA00BC registrada com 1 itens.
+2025-11-17 09:03:05 [INFO] sistema_logger :: Venda VENDA-20251117120305-8EC6B416 registrada com 1 itens.
+2025-11-17 09:03:39 [INFO] sistema_logger :: Caixa 3 fechado.
+2025-11-17 09:07:46 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 09:07:51 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 09:07:51 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 09:07:51 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T12:07:51.632304
+2025-11-17 09:07:51 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 09:07:51 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 09:08:00 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 09:08:00 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 09:13:15 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 09:13:19 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 09:13:19 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 09:13:19 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T12:13:19.588829
+2025-11-17 09:13:19 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 09:13:19 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 09:13:29 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 09:13:29 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 09:17:22 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 09:17:32 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 09:17:32 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 09:17:32 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T12:17:32.344908
+2025-11-17 09:17:32 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 09:17:32 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 09:17:39 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 09:17:39 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 09:18:22 [INFO] sistema_logger :: Caixa CX-20251117121822-C0C1055C aberto por usuário 1
+2025-11-17 09:22:04 [INFO] sistema_logger :: Venda VENDA-20251117122204-219F153B registrada com 5 itens.
+2025-11-17 09:22:31 [INFO] sistema_logger :: Caixa 4 fechado.
+2025-11-17 09:23:11 [INFO] sistema_logger :: Caixa CX-20251117122311-CE2B8F79 aberto por usuário 1
+2025-11-17 09:23:16 [INFO] sistema_logger :: Caixa 5 fechado.
+2025-11-17 09:43:20 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 09:43:26 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 09:43:26 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 09:43:26 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T12:43:26.050385
+2025-11-17 09:43:26 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 09:43:26 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 09:43:32 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 09:43:32 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 09:45:17 [INFO] sistema_logger :: Venda VENDA-20251117124517-A469F85F registrada com 6 itens.
+2025-11-17 09:48:48 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 09:48:52 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 09:48:52 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 09:48:52 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T12:48:52.255657
+2025-11-17 09:48:52 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 09:48:52 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 09:49:01 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 09:49:01 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 09:56:43 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 10:03:47 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 10:03:52 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 10:03:52 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 10:03:52 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T13:03:52.572665
+2025-11-17 10:03:52 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 10:03:52 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 10:04:03 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 10:04:03 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 10:07:19 [INFO] sistema_logger :: Venda VENDA-20251117130719-26DA7393 registrada com 2 itens.
+2025-11-17 10:08:46 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 10:08:46 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 10:10:43 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 10:10:49 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 10:10:49 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 10:10:49 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T13:10:49.226418
+2025-11-17 10:10:49 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 10:10:49 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 10:10:59 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 10:10:59 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 10:11:45 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 10:11:49 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 10:11:49 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 10:11:49 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T13:11:49.333775
+2025-11-17 10:11:49 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 10:11:49 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 10:11:57 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 10:11:57 [INFO] sistema_logger :: Login bem-sucedido para admin
+2025-11-17 10:14:35 [DEBUG] sistema_logger :: Logger configurado. Arquivo: C:\Users\User\.vscode\files\sistema_01.2\meu_sistema_pdv\DATA\system.log
+2025-11-17 10:14:40 [INFO] sistema_logger :: Inicializando banco de dados...
+2025-11-17 10:14:40 [DEBUG] sistema_logger :: Aplicando script de criação de tabelas.
+2025-11-17 10:14:40 [DEBUG] sistema_logger :: Dados iniciais aplicados em 2025-11-17T13:14:40.258479
+2025-11-17 10:14:40 [INFO] sistema_logger :: Banco de dados pronto.
+2025-11-17 10:14:40 [INFO] sistema_logger :: Aplicação iniciada.
+2025-11-17 10:14:49 [INFO] sistema_logger :: Usuário admin autenticado
+2025-11-17 10:14:49 [INFO] sistema_logger :: Login bem-sucedido para admin

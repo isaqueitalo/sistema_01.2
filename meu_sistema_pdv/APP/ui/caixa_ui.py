@@ -73,15 +73,31 @@ class CaixaView:
         self._toast("Caixa fechado.")
         self.atualizar_estado()
 
+    def _intervalo(self):
+        inicio = (self.rel_inicio.value or "").strip() or date.today().isoformat()
+        fim = (self.rel_fim.value or "").strip() or inicio
+        return f"{inicio} 00:00:00", f"{fim} 23:59:59"
+
     def carregar_relatorio(self):
-        rel = caixa_models.relatorio_caixas(self.rel_inicio.value, self.rel_fim.value)
-        self.relatorio_list.controls = [
-            ft.Text(
-                f"{item['codigo']} - Operador {item['operador']} - Status: {item['status']} - "
-                f"Abertura: {item['aberto_em']}"
+        inicio, fim = self._intervalo()
+        rel = caixa_models.relatorio_caixas(inicio, fim)
+        registros = []
+        for item in rel:
+            abertura = float(item["valor_abertura"] or 0)
+            fechamento = float(item["valor_fechamento"] or 0)
+            vendas = float(item["total_vendas"] or 0)
+            esperado = abertura + vendas
+            diferenca = fechamento - esperado
+            registros.append(
+                ft.Text(
+                    f"{item['codigo']} • Operador {item['operador']} • {item['status'].capitalize()} "
+                    f"| Abertura: {format_currency(abertura)} | "
+                    f"Vendas: {format_currency(vendas)} | "
+                    f"Fechamento: {format_currency(fechamento)} | "
+                    f"Diff: {format_currency(diferenca)}"
+                )
             )
-            for item in rel
-        ] or [ft.Text("Sem dados.")]
+        self.relatorio_list.controls = registros or [ft.Text("Sem dados.")]
         self.page.update()
 
     def build_view(self) -> ft.View:

@@ -56,11 +56,13 @@ class PDVController:
             visible=False,
             padding=0,
         )
+        self.sugestoes_dados: List[dict] = []
+        self.sugestoes_index: int = -1
         self.carrinho_list = ft.ListView(
             spacing=4,
             padding=0,
-            height=220,
-            auto_scroll=True,
+            expand=True,
+            auto_scroll=False,
         )
         self.quantidade_field = ft.TextField(
             label="Qtd",
@@ -138,17 +140,9 @@ class PDVController:
             self.ocultar_sugestoes()
             return
 
-        def _make_tile(produto):
-            return ft.ListTile(
-                title=ft.Text(produto["nome"]),
-                subtitle=ft.Text(
-                    f"Cód: {produto['codigo_barras'] or '-'} • R$ {produto['preco_venda']:.2f}"
-                ),
-                on_click=lambda e, p=produto: self.selecionar_sugestao(p),
-                dense=True,
-            )
-
-        self.sugestoes_lista.controls = [_make_tile(prod) for prod in resultados]
+        self.sugestoes_dados = resultados
+        self.sugestoes_index = 0
+        self._renderizar_sugestoes()
         self.sugestoes_container.visible = True
         self.page.update()
 
@@ -157,9 +151,37 @@ class PDVController:
         self.ocultar_sugestoes()
 
     def ocultar_sugestoes(self):
+        self.sugestoes_dados = []
+        self.sugestoes_index = -1
         if self.sugestoes_container.visible:
             self.sugestoes_container.visible = False
             self.page.update()
+
+    def _renderizar_sugestoes(self):
+        self.sugestoes_lista.controls = [
+            ft.ListTile(
+                title=ft.Text(produto["nome"]),
+                subtitle=ft.Text(
+                    f"C?d: {produto['codigo_barras'] or '-'} ? R$ {produto['preco_venda']:.2f}"
+                ),
+                selected=idx == self.sugestoes_index,
+                on_click=lambda e, p=produto: self.selecionar_sugestao(p),
+                dense=True,
+            )
+            for idx, produto in enumerate(self.sugestoes_dados)
+        ]
+
+    def mover_sugestao(self, delta: int):
+        if not self.sugestoes_dados:
+            return
+        self.sugestoes_index = (self.sugestoes_index + delta) % len(self.sugestoes_dados)
+        self._renderizar_sugestoes()
+        self.page.update()
+
+    def aplicar_sugestao_atual(self):
+        if not self.sugestoes_dados or self.sugestoes_index < 0:
+            return
+        self.selecionar_sugestao(self.sugestoes_dados[self.sugestoes_index])
 
     def atualizar_lista_carrinho(self):
         if not self.carrinho:
@@ -398,20 +420,33 @@ class PDVController:
         self.atualizar_resumo()
 
     def atalhos(self, e: ft.KeyboardEvent):
-        mapa = {
-            "F2": lambda: self.busca_field.focus(),
-            "F3": self.adicionar_item,
-            "F4": lambda: self.quantidade_field.focus(),
-            "F5": self.alterar_preco_ultimo,
-            "F6": lambda: self.remover_item(len(self.carrinho) - 1),
-            "F7": lambda: self.cliente_dropdown.focus(),
-            "F8": self.finalizar_venda,
-            "F9": lambda: self.pagamento_dropdown.focus(),
-            "F10": lambda: self.desconto_field.focus(),
-            "F11": lambda: self.on_back("/dashboard"),
-        }
-        if e.key in mapa:
-            mapa[e.key]()
+        key = (e.key or "").upper()
+        if key == "F2":
+            self.busca_field.focus()
+        elif key == "F3":
+            self.adicionar_item()
+        elif key == "F4":
+            self.quantidade_field.focus()
+        elif key == "F5":
+            self.alterar_preco_ultimo()
+        elif key == "F6":
+            self.remover_item(len(self.carrinho) - 1)
+        elif key == "F7":
+            self.cliente_dropdown.focus()
+        elif key == "F8":
+            self.finalizar_venda()
+        elif key == "F9":
+            self.pagamento_dropdown.focus()
+        elif key == "F10":
+            self.desconto_field.focus()
+        elif key == "F11":
+            self.on_back("/dashboard")
+        elif key in ("ARROWDOWN", "DOWN"):
+            self.mover_sugestao(1)
+        elif key in ("ARROWUP", "UP"):
+            self.mover_sugestao(-1)
+        elif key in ("ENTER", "NUMPADENTER"):
+            self._confirmar_entrada()
 
     def build_view(self) -> ft.View:
         cabecalho = ft.Row(
@@ -430,10 +465,10 @@ class PDVController:
         captura = ft.Container(
             bgcolor=SURFACE,
             border_radius=12,
-            padding=16,
+            padding=12,
             content=ft.Column(
                 controls=[
-                    ft.Text("Captura rápida (atalhos F2-F6)", color="white70"),
+                    ft.Text("Captura rápida (F2-F6)", color="white70"),
                     ft.Row(
                         controls=[
                             self.busca_field,
@@ -445,27 +480,28 @@ class PDVController:
                                 style=PRIMARY_BUTTON_STYLE,
                             ),
                         ],
-                        spacing=10,
+                        spacing=8,
                     ),
                     self.sugestoes_container,
-                ]
+                ],
+                spacing=6,
             ),
         )
 
         pagamentos = ft.Container(
             bgcolor=SURFACE,
             border_radius=12,
-            padding=16,
+            padding=12,
             content=ft.Column(
                 controls=[
                     ft.Text("Cliente e pagamento", color="white70"),
-                    ft.Row(
+                    ft.Column(
                         controls=[
                             self.cliente_dropdown,
                             self.pagamento_dropdown,
                             self.desconto_field,
                         ],
-                        spacing=12,
+                        spacing=8,
                     ),
                     ft.Row(
                         controls=[
@@ -480,24 +516,22 @@ class PDVController:
                                 on_click=lambda e: self.limpar_carrinho(),
                             ),
                         ],
-                        spacing=12,
+                        spacing=8,
                     ),
-                ]
+                ],
+                spacing=10,
             ),
         )
 
         resumo = ft.Container(
             bgcolor=SURFACE,
             border_radius=12,
-            padding=16,
+            padding=12,
             content=ft.Column(
                 controls=[
                     ft.Text("Resumo", size=18, weight=ft.FontWeight.BOLD),
                     ft.Row(
-                        controls=[
-                            ft.Text("Subtotal", color="white54"),
-                            self.subtotal_text,
-                        ],
+                        controls=[ft.Text("Subtotal", color="white54"), self.subtotal_text],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
                     ft.Row(
@@ -512,70 +546,90 @@ class PDVController:
                         ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
-                ]
+                ],
+                spacing=6,
             ),
         )
 
         ultima = ft.Container(
             bgcolor=SURFACE,
             border_radius=12,
-            padding=16,
+            padding=12,
             content=ft.Column(
                 controls=[ft.Text("Última venda", weight=ft.FontWeight.BOLD), self.ultima_text],
+                spacing=6,
             ),
         )
 
         tabela_container = ft.Container(
-            content=self.tabela,
-            expand=True,
-            height=320,
             bgcolor=SURFACE,
             border_radius=12,
-            padding=8,
-        )
-
-        carrinho_container = ft.Container(
-            width=320,
-            bgcolor=SURFACE,
-            border_radius=12,
-            padding=16,
+            padding=10,
             content=ft.Column(
-                controls=[ft.Text("Itens no carrinho", weight=ft.FontWeight.BOLD), self.carrinho_list],
-                spacing=10,
+                controls=[
+                    ft.Row(
+                        controls=[ft.Text("Itens da venda", weight=ft.FontWeight.BOLD)],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    ft.Container(
+                        height=360,
+                        content=ft.Column(
+                            controls=[self.tabela],
+                            scroll=ft.ScrollMode.AUTO,
+                            expand=True,
+                        ),
+                    ),
+                ],
+                spacing=6,
+                expand=True,
             ),
         )
 
-        conteudo = ft.Column(
+        carrinho_container = ft.Container(
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=12,
+            height=200,
+            content=ft.Column(
+                controls=[
+                    ft.Text("Itens no carrinho", weight=ft.FontWeight.BOLD),
+                    ft.Container(self.carrinho_list, expand=True),
+                ],
+                spacing=6,
+                expand=True,
+            ),
+        )
+
+        layout = ft.ResponsiveRow(
             controls=[
-                cabecalho,
-                captura,
-                ft.ResponsiveRow(
-                    controls=[
-                        ft.Container(tabela_container, col={"xs": 12, "lg": 8}),
-                        ft.Container(carrinho_container, col={"xs": 12, "lg": 4}),
-                    ],
-                    spacing=16,
-                    run_spacing=16,
+                ft.Container(
+                    ft.Column([captura, tabela_container], spacing=12),
+                    col={"xs": 12, "lg": 8},
                 ),
-                pagamentos,
-                ft.ResponsiveRow(
-                    controls=[
-                        ft.Container(resumo, col={"xs": 12, "lg": 6}),
-                        ft.Container(ultima, col={"xs": 12, "lg": 6}),
-                    ],
-                    spacing=16,
-                    run_spacing=16,
+                ft.Container(
+                    ft.Column(
+                        [carrinho_container, pagamentos, resumo, ultima],
+                        spacing=12,
+                    ),
+                    col={"xs": 12, "lg": 4},
                 ),
             ],
-            spacing=14,
+            spacing=12,
+            run_spacing=12,
         )
 
         self.page.on_keyboard_event = self.atalhos
         return ft.View(
             "/pdv",
-            controls=[ft.Container(conteudo, expand=True)],
+            controls=[ft.Container(ft.Column([cabecalho, layout], spacing=14), expand=True)],
             scroll=ft.ScrollMode.AUTO,
         )
+
+    def _confirmar_entrada(self):
+        if self.sugestoes_dados:
+            self.aplicar_sugestao_atual()
+        else:
+            self.adicionar_item()
 
 
 def build_pdv_view(page: ft.Page, on_back):

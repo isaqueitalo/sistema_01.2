@@ -122,32 +122,37 @@ class RelatoriosView:
                 "/relatorios",
                 controls=[ft.Text("Usuário sem permissão para relatórios.", color="red")],
             )
-        filtros = ft.Row(
+        filtros = ft.ResponsiveRow(
             controls=[
-                self.inicio,
-                self.fim,
-                ft.FilledButton(
-                    "Atualizar",
-                    icon=ft.icons.REFRESH,
-                    on_click=lambda e: self.carregar(),
-                    style=PRIMARY_BUTTON_STYLE,
+                ft.Container(self.inicio, col={"sm": 12, "md": 4}),
+                ft.Container(self.fim, col={"sm": 12, "md": 4}),
+                ft.Container(
+                    ft.FilledButton(
+                        "Atualizar",
+                        icon=ft.icons.REFRESH,
+                        on_click=lambda e: self.carregar(),
+                        style=PRIMARY_BUTTON_STYLE,
+                    ),
+                    col={"sm": 6, "md": 2},
                 ),
-                ft.OutlinedButton(
-                    "Exportar PDF",
-                    icon=ft.icons.PICTURE_AS_PDF,
-                    on_click=lambda e: self.exportar_pdf(),
+                ft.Container(
+                    ft.OutlinedButton(
+                        "Exportar PDF",
+                        icon=ft.icons.PICTURE_AS_PDF,
+                        on_click=lambda e: self.exportar_pdf(),
+                    ),
+                    col={"sm": 6, "md": 2},
                 ),
             ],
-            wrap=True,
             spacing=10,
+            run_spacing=10,
         )
-        resumo = ft.Row(
+        cards = ft.ResponsiveRow(
             controls=[
                 ft.Container(
                     bgcolor=SURFACE,
                     border_radius=12,
                     padding=16,
-                    expand=1,
                     content=ft.Column(
                         controls=[
                             ft.Text("Total no período"),
@@ -156,43 +161,47 @@ class RelatoriosView:
                             self.qtd_text,
                         ]
                     ),
+                    col={"sm": 12, "md": 6, "lg": 4},
                 ),
                 ft.Container(
                     bgcolor=SURFACE,
                     border_radius=12,
                     padding=16,
-                    expand=1,
                     content=ft.Column(
                         controls=[ft.Text("Pagamentos"), self.pagamentos_list],
                         spacing=8,
                     ),
+                    col={"sm": 12, "md": 6, "lg": 4},
+                ),
+                ft.Container(
+                    bgcolor=SURFACE,
+                    border_radius=12,
+                    padding=16,
+                    content=ft.Column(
+                        controls=[ft.Text("Produtos mais vendidos"), self.top_produtos_list],
+                        spacing=12,
+                    ),
+                    col={"sm": 12, "md": 6, "lg": 4},
+                ),
+                ft.Container(
+                    bgcolor=SURFACE,
+                    border_radius=12,
+                    padding=16,
+                    content=ft.Column(
+                        controls=[
+                            ft.Text("Estoque baixo"),
+                            self.estoque_baixo,
+                            ft.Divider(),
+                            ft.Text("Validades próximas"),
+                            self.validade_list,
+                        ],
+                        spacing=12,
+                    ),
+                    col={"sm": 12, "md": 6, "lg": 4},
                 ),
             ],
             spacing=12,
-        )
-        topo = ft.Container(
-            bgcolor=SURFACE,
-            border_radius=12,
-            padding=16,
-            content=ft.Column(
-                controls=[ft.Text("Produtos mais vendidos"), self.top_produtos_list],
-                spacing=12,
-            ),
-        )
-        estoque = ft.Container(
-            bgcolor=SURFACE,
-            border_radius=12,
-            padding=16,
-            content=ft.Column(
-                controls=[
-                    ft.Text("Estoque baixo"),
-                    self.estoque_baixo,
-                    ft.Divider(),
-                    ft.Text("Validades próximas"),
-                    self.validade_list,
-                ],
-                spacing=12,
-            ),
+            run_spacing=12,
         )
         return ft.View(
             "/relatorios",
@@ -201,13 +210,12 @@ class RelatoriosView:
                     controls=[
                         ft.Text("Relatórios e Indicadores", size=24, weight=ft.FontWeight.BOLD),
                         filtros,
-                        resumo,
-                        topo,
-                        estoque,
+                        cards,
                     ],
                     spacing=16,
                 )
             ],
+            scroll=ft.ScrollMode.AUTO,
         )
 
 

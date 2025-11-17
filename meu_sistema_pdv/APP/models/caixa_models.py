@@ -88,10 +88,16 @@ def fechar_caixa(caixa_id: int, valor_fechamento: float) -> None:
 def relatorio_caixas(inicio: str, fim: str) -> List:
     return execute(
         """
-        SELECT c.*, u.nome AS operador
+        SELECT
+            c.*,
+            u.nome AS operador,
+            COALESCE(SUM(m.valor), 0) AS total_movimentado,
+            COALESCE(SUM(CASE WHEN m.tipo = 'venda' THEN m.valor ELSE 0 END), 0) AS total_vendas
         FROM caixas c
         JOIN usuarios u ON u.id = c.usuario_id
+        LEFT JOIN caixa_movimentos m ON m.caixa_id = c.id
         WHERE c.aberto_em BETWEEN ? AND ?
+        GROUP BY c.id
         ORDER BY c.aberto_em DESC
         """,
         (inicio, fim),
