@@ -36,6 +36,7 @@ class RelatoriosView:
         self.fim = ft.TextField(label="Data final (YYYY-MM-DD)", value=hoje)
         self.total_text = ft.Text("R$ 0,00", size=26, weight=ft.FontWeight.BOLD)
         self.qtd_text = ft.Text("0", size=22)
+        self.descontos_text = ft.Text("R$ 0,00", size=22)
         self.pagamentos_list = ft.Column()
         self.top_produtos_list = ft.Column()
         self.estoque_baixo = ft.Column()
@@ -53,6 +54,7 @@ class RelatoriosView:
         inicio, fim = self._range()
         total = vendas_models.total_vendas_periodo(inicio, fim)
         qtd = vendas_models.quantidade_vendas_periodo(inicio, fim)
+        descontos = vendas_models.total_descontos_periodo(inicio, fim)
         pagamentos = vendas_models.pagamentos_por_periodo(inicio, fim)
         top_produtos = vendas_models.produtos_mais_vendidos(inicio, fim, limite=5)
         estoque_baixo = produtos_models.produtos_estoque_baixo()
@@ -60,6 +62,7 @@ class RelatoriosView:
 
         self.total_text.value = format_currency(total)
         self.qtd_text.value = str(qtd)
+        self.descontos_text.value = format_currency(descontos)
         self.pagamentos_list.controls = [
             ft.Text(f"{p['forma_pagamento']}: {format_currency(p['total'])}")
             for p in pagamentos
@@ -159,6 +162,8 @@ class RelatoriosView:
                             self.total_text,
                             ft.Text("Quantidade de vendas"),
                             self.qtd_text,
+                            ft.Text("Descontos aplicados"),
+                            self.descontos_text,
                         ]
                     ),
                     col={"sm": 12, "md": 6, "lg": 4},

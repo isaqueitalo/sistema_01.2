@@ -11,6 +11,7 @@ from APP.ui import (
     build_config_view,
     build_dashboard_view,
     build_login_view,
+    build_pedidos_view,
     build_pdv_view,
     build_produtos_view,
     build_relatorios_view,
@@ -76,6 +77,8 @@ def main(page: ft.Page):
             page.views.append(build_logs_view(page))
         elif page.route == "/config":
             page.views.append(build_config_view(page))
+        elif page.route == "/pedidos":
+            page.views.append(build_pedidos_view(page))
         else:
             page.views.append(
                 ft.View(

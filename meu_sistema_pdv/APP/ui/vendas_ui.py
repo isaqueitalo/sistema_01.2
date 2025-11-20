@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional
 
 import flet as ft
@@ -71,9 +72,10 @@ class PDVController:
             on_submit=lambda _: self.adicionar_item(),
         )
         self.desconto_field = ft.TextField(
-            label="Desconto (%)",
+            label="Desconto (R$)",
             width=150,
             value="0",
+            keyboard_type=ft.KeyboardType.NUMBER,
             on_change=lambda _: self.atualizar_resumo(),
         )
         self.pagamento_dropdown = ft.Dropdown(
@@ -158,18 +160,29 @@ class PDVController:
             self.page.update()
 
     def _renderizar_sugestoes(self):
-        self.sugestoes_lista.controls = [
-            ft.ListTile(
-                title=ft.Text(produto["nome"]),
-                subtitle=ft.Text(
-                    f"C?d: {produto['codigo_barras'] or '-'} ? R$ {produto['preco_venda']:.2f}"
-                ),
-                selected=idx == self.sugestoes_index,
-                on_click=lambda e, p=produto: self.selecionar_sugestao(p),
-                dense=True,
+        controles = []
+        for idx, produto in enumerate(self.sugestoes_dados):
+            selecionado = idx == self.sugestoes_index
+            controles.append(
+                ft.Container(
+                    bgcolor="#1f2937" if selecionado else None,
+                    border_radius=6,
+                    padding=8,
+                    on_click=lambda e, p=produto: self.selecionar_sugestao(p),
+                    content=ft.Column(
+                        controls=[
+                            ft.Text(produto["nome"], weight=ft.FontWeight.BOLD),
+                            ft.Text(
+                                f"Cód: {produto['codigo_barras'] or '-'} • {format_currency(produto['preco_venda'])}",
+                                size=12,
+                                color="white70",
+                            ),
+                        ],
+                        spacing=2,
+                    ),
+                )
             )
-            for idx, produto in enumerate(self.sugestoes_dados)
-        ]
+        self.sugestoes_lista.controls = controles
 
     def mover_sugestao(self, delta: int):
         if not self.sugestoes_dados:
@@ -303,13 +316,13 @@ class PDVController:
     def atualizar_resumo(self):
         subtotal = sum(item["quantidade"] * item["preco_unitario"] for item in self.carrinho)
         try:
-            desconto_perc = float(self.desconto_field.value or "0")
+            desconto_valor = float((self.desconto_field.value or "0").replace(",", "."))
         except ValueError:
-            desconto_perc = 0
-        desconto = subtotal * (desconto_perc / 100)
-        total = subtotal - desconto
+            desconto_valor = 0
+        desconto_valor = max(0, min(desconto_valor, subtotal))
+        total = subtotal - desconto_valor
         self.subtotal_text.value = format_currency(subtotal)
-        self.desconto_text.value = f"- {format_currency(desconto)}"
+        self.desconto_text.value = format_currency(desconto_valor)
         self.total_text.value = format_currency(max(total, 0))
         self.page.update()
 
@@ -359,17 +372,15 @@ class PDVController:
             int(self.cliente_dropdown.value) if self.cliente_dropdown.value else None
         )
         try:
-            desconto = float(self.desconto_field.value or "0")
+            desconto_valor = float((self.desconto_field.value or "0").replace(",", "."))
         except ValueError:
-            desconto = 0
+            desconto_valor = 0
+        subtotal = sum(item["quantidade"] * item["preco_unitario"] for item in self.carrinho)
+        desconto_valor = max(0, min(desconto_valor, subtotal))
         pagamentos = [
             {
                 "forma": self.pagamento_dropdown.value or "Dinheiro",
-                "valor": sum(
-                    item["quantidade"] * item["preco_unitario"]
-                    for item in self.carrinho
-                )
-                * (1 - desconto / 100),
+                "valor": subtotal - desconto_valor,
             }
         ]
 
@@ -377,7 +388,7 @@ class PDVController:
             self.carrinho,
             usuario_id=session.user.id,
             cliente_id=cliente_id,
-            desconto_percentual=desconto,
+            desconto_valor=desconto_valor,
             pagamentos=pagamentos,
             forma_principal=self.pagamento_dropdown.value,
         )
@@ -402,6 +413,13 @@ class PDVController:
         if not self.ultima_venda:
             self.ultima_text.value = "Nenhuma venda ainda."
         else:
+            timestamp = self.ultima_venda.get("criado_em")
+            hora = ""
+            if timestamp:
+                try:
+                    hora = datetime.fromisoformat(timestamp).strftime("%d/%m %H:%M")
+                except ValueError:
+                    hora = timestamp
             itens_detalhe = "\n".join(
                 [
                     f"- {item['nome']} x{item['quantidade']} = {format_currency(item['quantidade'] * item['preco_unitario'])}"
@@ -410,7 +428,8 @@ class PDVController:
             )
             self.ultima_text.value = (
                 f"Venda {self.ultima_venda['codigo']}\n"
-                f"Total: {format_currency(self.ultima_venda['total'])}\nItens:\n{itens_detalhe}"
+                f"Total: {format_currency(self.ultima_venda['total'])}\n"
+                f"Hora: {hora}\nItens:\n{itens_detalhe}"
             )
         self.page.update()
 
@@ -420,7 +439,7 @@ class PDVController:
         self.atualizar_resumo()
 
     def atalhos(self, e: ft.KeyboardEvent):
-        key = (e.key or "").upper()
+        key = (e.key or "").replace(" ", "").upper()
         if key == "F2":
             self.busca_field.focus()
         elif key == "F3":

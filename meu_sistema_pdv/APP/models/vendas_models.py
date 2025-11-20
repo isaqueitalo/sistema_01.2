@@ -26,7 +26,7 @@ def registrar_venda(
     *,
     usuario_id: int,
     cliente_id: Optional[int],
-    desconto_percentual: float,
+    desconto_valor: float,
     pagamentos: Optional[Sequence[Dict[str, float]]] = None,
     forma_principal: Optional[str] = None,
 ) -> Dict:
@@ -37,7 +37,8 @@ def registrar_venda(
     with conn:
         cursor = conn.cursor()
         total_bruto = sum(item["quantidade"] * item["preco_unitario"] for item in itens)
-        desconto_valor = total_bruto * (desconto_percentual / 100)
+        desconto_valor = max(0, desconto_valor)
+        desconto_valor = min(desconto_valor, total_bruto)
         total_liquido = total_bruto - desconto_valor
         codigo = gerar_chave_unica("VENDA")
         agora = datetime.now().isoformat()
@@ -52,7 +53,7 @@ def registrar_venda(
                 usuario_id,
                 cliente_id,
                 total_bruto,
-                desconto_percentual,
+                desconto_valor,
                 total_liquido,
                 forma_principal or (pagamentos[0]["forma"] if pagamentos else "Dinheiro"),
                 agora,
@@ -96,7 +97,8 @@ def registrar_venda(
         "id": venda_id,
         "codigo": codigo,
         "total": total_liquido,
-        "desconto_percentual": desconto_percentual,
+        "desconto_valor": desconto_valor,
+        "criado_em": agora,
         "itens": itens,
         "pagamentos": pagamentos,
     }
@@ -105,7 +107,7 @@ def registrar_venda(
 def vendas_por_periodo(inicio: str, fim: str) -> List:
     return execute(
         """
-        SELECT v.*, u.nome AS vendedor, c.nome AS cliente
+        SELECT v.*, v.desconto_percentual AS desconto_valor, u.nome AS vendedor, c.nome AS cliente
         FROM vendas v
         LEFT JOIN usuarios u ON u.id = v.usuario_id
         LEFT JOIN clientes c ON c.id = v.cliente_id
@@ -134,6 +136,14 @@ def quantidade_vendas_periodo(inicio: str, fim: str) -> int:
     )
     return int(row["qtd"] if row else 0)
 
+
+def total_descontos_periodo(inicio: str, fim: str) -> float:
+    row = execute(
+        "SELECT COALESCE(SUM(desconto_percentual), 0) AS total FROM vendas WHERE criado_em BETWEEN ? AND ?",
+        (inicio, fim),
+        fetchone=True,
+    )
+    return float(row["total"] if row else 0)
 
 def pagamentos_por_periodo(inicio: str, fim: str) -> List:
     return execute(
@@ -201,14 +211,24 @@ def ultima_venda() -> Optional[Dict]:
     return {"venda": row, "itens": itens, "pagamentos": pagamentos}
 
 
+def itens_da_venda(venda_id: int):
+    return execute(
+        "SELECT vi.*, p.nome FROM venda_itens vi JOIN produtos p ON p.id = vi.produto_id WHERE venda_id = ?",
+        (venda_id,),
+        fetchall=True,
+    )
+
+
 __all__ = [
     "registrar_venda",
     "vendas_por_periodo",
     "total_vendas_periodo",
     "quantidade_vendas_periodo",
+    "total_descontos_periodo",
     "pagamentos_por_periodo",
     "produtos_mais_vendidos",
     "historico_por_cliente",
     "ultima_venda",
+    "itens_da_venda",
     "FORMAS_PAGAMENTO",
 ]

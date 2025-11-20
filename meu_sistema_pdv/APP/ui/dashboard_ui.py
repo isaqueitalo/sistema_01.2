@@ -59,6 +59,7 @@ def build_dashboard_view(page: ft.Page, on_navigate, on_logout) -> ft.View:
         ("Produtos", ft.icons.INVENTORY_2_ROUNDED, "/produtos", "produtos"),
         ("Usuários", ft.icons.PEOPLE, "/usuarios", "usuarios"),
         ("Relatórios", ft.icons.INSERT_CHART, "/relatorios", "relatorios"),
+        ("Pedidos do dia", ft.icons.RECEIPT_LONG, "/pedidos", "relatorios"),
         ("Controle de Caixa", ft.icons.ATTACH_MONEY, "/caixa", "caixa"),
         ("Logs do sistema", ft.icons.LIST_ALT, "/logs", "logs"),
         ("Configurações", ft.icons.SETTINGS, "/config", "config"),

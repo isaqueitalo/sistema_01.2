@@ -7,6 +7,7 @@ from .relatorios_ui import build_relatorios_view
 from .caixa_ui import build_caixa_view
 from .logs_viewer import build_logs_view
 from .config_ui import build_config_view
+from .pedidos_ui import build_pedidos_view
 
 __all__ = [
     "build_login_view",
@@ -18,4 +19,5 @@ __all__ = [
     "build_caixa_view",
     "build_logs_view",
     "build_config_view",
+    "build_pedidos_view",
 ]

@@ -32,8 +32,12 @@ class ProdutosView:
             on_change=lambda _: self.carregar_produtos(),
         )
         self.nome = ft.TextField(label="Nome do produto", expand=2)
-        self.preco = ft.TextField(label="Preço de venda", keyboard_type=ft.KeyboardType.NUMBER)
-        self.estoque = ft.TextField(label="Estoque atual", keyboard_type=ft.KeyboardType.NUMBER)
+        self.preco = ft.TextField(
+            label="Preço de venda", keyboard_type=ft.KeyboardType.NUMBER
+        )
+        self.estoque = ft.TextField(
+            label="Estoque atual", keyboard_type=ft.KeyboardType.NUMBER
+        )
         self.estoque_minimo = ft.TextField(
             label="Estoque mínimo", keyboard_type=ft.KeyboardType.NUMBER
         )
@@ -69,6 +73,12 @@ class ProdutosView:
             rows=[],
         )
         self.carregar_produtos()
+
+    def _parse_decimal(self, value: str) -> float:
+        try:
+            return float((value or "0").replace(",", "."))
+        except ValueError:
+            return 0.0
 
     def _alerta(self, mensagem: str, cor: str = PRIMARY_COLOR):
         self.page.snack_bar = ft.SnackBar(ft.Text(mensagem), bgcolor=cor)
@@ -149,13 +159,9 @@ class ProdutosView:
         self.page.update()
 
     def salvar_produto(self):
-        try:
-            preco = float(self.preco.value or "0")
-            estoque = float(self.estoque.value or "0")
-            estoque_minimo = float(self.estoque_minimo.value or "0")
-        except ValueError:
-            self._alerta("Valores numéricos inválidos.", WARNING_COLOR)
-            return
+        preco = self._parse_decimal(self.preco.value)
+        estoque = self._parse_decimal(self.estoque.value)
+        estoque_minimo = self._parse_decimal(self.estoque_minimo.value)
         dados = dict(
             nome=self.nome.value,
             preco_venda=preco,
