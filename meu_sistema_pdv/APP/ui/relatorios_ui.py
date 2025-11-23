@@ -38,8 +38,10 @@ class RelatoriosView:
         self.qtd_text = ft.Text("0", size=22)
         self.descontos_text = ft.Text("R$ 0,00", size=22)
         self.saidas_total_text = ft.Text("R$ 0,00", size=22)
+        self.perdas_total_text = ft.Text("R$ 0,00", size=22)
         self.pagamentos_list = ft.Column()
         self.saidas_list = ft.Column()
+        self.perdas_list = ft.Column()
         self.top_produtos_list = ft.Column()
         self.estoque_baixo = ft.Column()
         self.validade_list = ft.Column()
@@ -60,6 +62,8 @@ class RelatoriosView:
         pagamentos = vendas_models.pagamentos_por_periodo(inicio, fim)
         saidas_total = caixa_models.total_saidas_periodo(inicio, fim)
         saidas = caixa_models.saidas_por_periodo(inicio, fim)
+        perdas_total = caixa_models.total_perdas_periodo(inicio, fim)
+        perdas = caixa_models.perdas_por_periodo(inicio, fim)
         top_produtos = vendas_models.produtos_mais_vendidos(inicio, fim, limite=5)
         estoque_baixo = produtos_models.produtos_estoque_baixo()
         validade = produtos_models.produtos_proximos_validade()
@@ -68,6 +72,7 @@ class RelatoriosView:
         self.qtd_text.value = str(qtd)
         self.descontos_text.value = format_currency(descontos)
         self.saidas_total_text.value = format_currency(saidas_total)
+        self.perdas_total_text.value = format_currency(perdas_total)
         self.pagamentos_list.controls = [
             ft.Text(f"{p['forma_pagamento']}: {format_currency(p['total'])}")
             for p in pagamentos
@@ -78,6 +83,12 @@ class RelatoriosView:
             )
             for p in saidas
         ] or [ft.Text("Nenhuma saída registrada.", color=TEXT_MUTED)]
+        self.perdas_list.controls = [
+            ft.Text(
+                f"{format_currency(abs(p['valor']))} - {p['descricao'] or 'Perda registrada'} ({p['criado_em']})"
+            )
+            for p in perdas
+        ] or [ft.Text("Nenhuma perda registrada.", color=TEXT_MUTED)]
         self.top_produtos_list.controls = [
             ft.Text(f"{p['nome']} - {p['quantidade']} un.")
             for p in top_produtos
@@ -106,6 +117,8 @@ class RelatoriosView:
         pagamentos = vendas_models.pagamentos_por_periodo(inicio, fim)
         saidas_total = caixa_models.total_saidas_periodo(inicio, fim)
         saidas = caixa_models.saidas_por_periodo(inicio, fim)
+        perdas_total = caixa_models.total_perdas_periodo(inicio, fim)
+        perdas = caixa_models.perdas_por_periodo(inicio, fim)
         top_produtos = vendas_models.produtos_mais_vendidos(inicio, fim, limite=5)
         c = canvas.Canvas(str(destino), pagesize=A4)
         c.setFont("Helvetica-Bold", 16)
@@ -125,6 +138,15 @@ class RelatoriosView:
                 60,
                 y,
                 f"{format_currency(abs(saida['valor']))} - {saida['descricao'] or 'Saída em dinheiro'} ({saida['criado_em']})",
+            )
+            y -= 18
+        c.drawString(50, y, f"Perdas: {format_currency(perdas_total)}")
+        y -= 20
+        for perda in perdas:
+            c.drawString(
+                60,
+                y,
+                f"{format_currency(abs(perda['valor']))} - {perda['descricao'] or 'Perda registrada'} ({perda['criado_em']})",
             )
             y -= 18
         y -= 10
@@ -213,6 +235,12 @@ class RelatoriosView:
                             self.saidas_total_text,
                             ft.Divider(),
                             self.saidas_list,
+                            ft.Divider(),
+                            ft.Text("Perdas", weight=ft.FontWeight.BOLD),
+                            ft.Text("Total de perdas:", color=TEXT_MUTED, size=12),
+                            self.perdas_total_text,
+                            ft.Divider(),
+                            self.perdas_list,
                         ],
                         spacing=6,
                     ),

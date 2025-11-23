@@ -93,6 +93,19 @@ class PDVController:
             min_lines=2,
             max_lines=3,
         )
+        self.perda_valor_field = ft.TextField(
+            label="Valor da perda",
+            width=180,
+            value="0",
+            keyboard_type=ft.KeyboardType.NUMBER,
+            prefix_text="R$ ",
+        )
+        self.perda_descricao_field = ft.TextField(
+            label="Explique a perda (extravio, dano, doação, etc.)",
+            multiline=True,
+            min_lines=2,
+            max_lines=3,
+        )
         self.pagamento_dropdown = ft.Dropdown(
             label="Forma de pagamento (F9)",
             value="Dinheiro",
@@ -517,6 +530,46 @@ class PDVController:
             "Pagamento em dinheiro do caixa registrado.", color=SUCCESS_COLOR
         )
 
+    def registrar_perda(self, _=None):
+        caixa = caixa_models.caixa_aberto(session.user.id)
+        if not caixa:
+            self._mostrar_alerta(
+                "Nenhum caixa aberto para registrar perdas.", color=WARNING_COLOR
+            )
+            return
+
+        try:
+            valor = float((self.perda_valor_field.value or "0").replace(",", "."))
+        except ValueError:
+            valor = 0
+
+        descricao = (self.perda_descricao_field.value or "").strip()
+
+        if valor <= 0:
+            self._mostrar_alerta(
+                "Informe um valor maior que zero para registrar a perda.",
+                color=WARNING_COLOR,
+            )
+            return
+        if not descricao:
+            self._mostrar_alerta(
+                "Explique o motivo da perda (extravio, dano, doação...).",
+                color=WARNING_COLOR,
+            )
+            return
+
+        caixa_models.registrar_movimento(
+            caixa["id"],
+            tipo="perda",
+            valor=-abs(valor),
+            forma_pagamento="Dinheiro",
+            descricao=descricao,
+        )
+        self.perda_valor_field.value = "0"
+        self.perda_descricao_field.value = ""
+        self.page.update()
+        self._mostrar_alerta("Perda registrada no caixa.", color=SUCCESS_COLOR)
+
     def atalhos(self, e: ft.KeyboardEvent):
         key = (e.key or "").replace(" ", "").upper()
         if key == "F2":
@@ -656,6 +709,39 @@ class PDVController:
             ),
         )
 
+        perdas_caixa = ft.Container(
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=12,
+            content=ft.Column(
+                controls=[
+                    ft.Text(
+                        "Perdas", color="white70", weight=ft.FontWeight.BOLD
+                    ),
+                    ft.Text(
+                        "Registre produtos extraviados, danificados ou doados para que entrem no relatório.",
+                        color="white60",
+                        size=12,
+                    ),
+                    ft.Row(
+                        controls=[
+                            self.perda_valor_field,
+                            ft.FilledButton(
+                                "Registrar perda",
+                                icon=ft.icons.REMOVE_SHOPPING_CART,
+                                style=PRIMARY_BUTTON_STYLE,
+                                on_click=self.registrar_perda,
+                            ),
+                        ],
+                        spacing=10,
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    self.perda_descricao_field,
+                ],
+                spacing=8,
+            ),
+        )
+
         resumo = ft.Container(
             bgcolor=SURFACE,
             border_radius=12,
@@ -726,7 +812,7 @@ class PDVController:
                 ),
                 ft.Container(
                     ft.Column(
-                        [pagamentos, resumo, ultima, pagamentos_caixa],
+                        [pagamentos, resumo, ultima, pagamentos_caixa, perdas_caixa],
                         spacing=12,
                     ),
                     col={"xs": 12, "lg": 4},

@@ -139,6 +139,32 @@ def saidas_por_periodo(inicio: str, fim: str) -> List:
     )
 
 
+def total_perdas_periodo(inicio: str, fim: str) -> float:
+    row = execute(
+        """
+        SELECT COALESCE(SUM(valor), 0) AS total
+        FROM caixa_movimentos
+        WHERE tipo = 'perda' AND criado_em BETWEEN ? AND ?
+        """,
+        (inicio, fim),
+        fetchone=True,
+    )
+    return abs(float(row["total"] if row else 0))
+
+
+def perdas_por_periodo(inicio: str, fim: str) -> List:
+    return execute(
+        """
+        SELECT descricao, valor, criado_em
+        FROM caixa_movimentos
+        WHERE tipo = 'perda' AND criado_em BETWEEN ? AND ?
+        ORDER BY criado_em DESC
+        """,
+        (inicio, fim),
+        fetchall=True,
+    )
+
+
 __all__ = [
     "caixa_aberto",
     "abrir_caixa",
@@ -148,4 +174,6 @@ __all__ = [
     "relatorio_caixas",
     "total_saidas_periodo",
     "saidas_por_periodo",
+    "total_perdas_periodo",
+    "perdas_por_periodo",
 ]
