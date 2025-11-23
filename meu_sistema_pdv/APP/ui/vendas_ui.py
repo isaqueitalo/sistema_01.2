@@ -49,7 +49,6 @@ class PDVController:
             border_radius=12,
             on_submit=lambda _: self._confirmar_entrada(),
             on_change=lambda e: self.atualizar_sugestoes(),
-            on_key_down=self._atalho_busca,
         )
         self.sugestoes_lista = ft.Column(spacing=0)
         self.sugestoes_container = ft.Container(
