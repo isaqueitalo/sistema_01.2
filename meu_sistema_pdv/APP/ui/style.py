@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import flet as ft
 
+# Compatibilidade entre versões do Flet
+CONTROL_STATE = ft.ControlState if hasattr(ft, "ControlState") else ft.MaterialState
+
 PRIMARY_COLOR = "#0EA5E9"
 SECONDARY_COLOR = "#6366F1"
 SUCCESS_COLOR = "#22C55E"
@@ -46,9 +49,9 @@ def action_button(label: str, icon: str, on_click) -> ft.ElevatedButton:
         text=label,
         icon=icon,
         style=ft.ButtonStyle(
-            bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
-            color={ft.MaterialState.DEFAULT: "white"},
-            shape={ft.MaterialState.DEFAULT: ft.RoundedRectangleBorder(radius=12)},
+            bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
+            color={CONTROL_STATE.DEFAULT: "white"},
+            shape={CONTROL_STATE.DEFAULT: ft.RoundedRectangleBorder(radius=12)},
         ),
         on_click=on_click,
     )
@@ -65,4 +68,5 @@ __all__ = [
     "ERROR_COLOR",
     "SURFACE",
     "TEXT_MUTED",
+    "CONTROL_STATE",
 ]

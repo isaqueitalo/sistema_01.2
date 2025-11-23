@@ -17,6 +17,7 @@ from APP.models import (
 )
 
 from .style import (
+    CONTROL_STATE,
     PRIMARY_COLOR,
     SECONDARY_COLOR,
     SURFACE,
@@ -25,12 +26,12 @@ from .style import (
 )
 
 PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
-    color={ft.MaterialState.DEFAULT: "white"},
+    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
+    color={CONTROL_STATE.DEFAULT: "white"},
 )
 SECONDARY_BUTTON_STYLE = ft.ButtonStyle(
-    bgcolor={ft.MaterialState.DEFAULT: SECONDARY_COLOR},
-    color={ft.MaterialState.DEFAULT: "white"},
+    bgcolor={CONTROL_STATE.DEFAULT: SECONDARY_COLOR},
+    color={CONTROL_STATE.DEFAULT: "white"},
 )
 
 logger = get_logger()
@@ -46,8 +47,9 @@ class PDVController:
             label="Código de barras ou nome",
             autofocus=True,
             border_radius=12,
-            on_submit=lambda _: self.adicionar_item(),
+            on_submit=lambda _: self._confirmar_entrada(),
             on_change=lambda e: self.atualizar_sugestoes(),
+            on_key_down=self._atalho_busca,
         )
         self.sugestoes_lista = ft.Column(spacing=0)
         self.sugestoes_container = ft.Container(
@@ -195,6 +197,24 @@ class PDVController:
         if not self.sugestoes_dados or self.sugestoes_index < 0:
             return
         self.selecionar_sugestao(self.sugestoes_dados[self.sugestoes_index])
+
+    def _atalho_busca(self, e: ft.KeyboardEvent):
+        """Permite navegar nas sugestões e confirmar pelo teclado.
+
+        Esta função fica isolada para evitar problemas de indentação e
+        padronizar o tratamento das teclas, já que o Flet envia os nomes
+        das teclas com ou sem espaços dependendo do sistema operacional.
+        """
+
+        key = (e.key or "").replace(" ", "").upper()
+        if key in ("ARROWDOWN", "DOWN"):
+            self.mover_sugestao(1)
+        elif key in ("ARROWUP", "UP"):
+            self.mover_sugestao(-1)
+        elif key in ("ENTER", "NUMPADENTER"):
+            self._confirmar_entrada()
+        elif key in ("ESCAPE", "ESC"):
+            self.ocultar_sugestoes()
 
     def atualizar_lista_carrinho(self):
         if not self.carrinho:

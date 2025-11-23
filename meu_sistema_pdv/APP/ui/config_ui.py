@@ -7,11 +7,11 @@ from APP.core.config import get_config
 from APP.core.database import execute
 from APP.core.security import can_access
 
-from .style import PRIMARY_COLOR, SURFACE
+from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE
 
 PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
-    color={ft.MaterialState.DEFAULT: "white"},
+    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
+    color={CONTROL_STATE.DEFAULT: "white"},
 )
 
 

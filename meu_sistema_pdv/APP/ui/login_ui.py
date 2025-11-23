@@ -6,7 +6,7 @@ from APP.core.logger import get_logger
 from APP.core.session import session
 from APP.models import usuarios_models
 
-from .style import BACKGROUND, PRIMARY_COLOR, SURFACE
+from .style import BACKGROUND, CONTROL_STATE, PRIMARY_COLOR, SURFACE
 
 logger = get_logger()
 
@@ -48,9 +48,9 @@ def build_login_view(page: ft.Page, on_success) -> ft.View:
         icon=ft.icons.LOGIN,
         on_click=autenticar,
         style=ft.ButtonStyle(
-            bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
-            color={ft.MaterialState.DEFAULT: "white"},
-            shape={ft.MaterialState.DEFAULT: ft.RoundedRectangleBorder(radius=12)},
+            bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
+            color={CONTROL_STATE.DEFAULT: "white"},
+            shape={CONTROL_STATE.DEFAULT: ft.RoundedRectangleBorder(radius=12)},
         ),
     )
 

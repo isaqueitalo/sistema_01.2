@@ -7,11 +7,11 @@ import flet as ft
 from APP.core.security import can_access
 from APP.models import usuarios_models
 
-from .style import PRIMARY_COLOR, SURFACE, WARNING_COLOR
+from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE, WARNING_COLOR
 
 PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
-    color={ft.MaterialState.DEFAULT: "white"},
+    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
+    color={CONTROL_STATE.DEFAULT: "white"},
 )
 
 

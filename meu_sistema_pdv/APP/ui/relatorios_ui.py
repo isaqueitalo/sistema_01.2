@@ -11,11 +11,11 @@ from APP.core.security import can_access
 from APP.core.utils import format_currency
 from APP.models import produtos_models, vendas_models
 
-from .style import PRIMARY_COLOR, SURFACE, TEXT_MUTED
+from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE, TEXT_MUTED
 
 PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
-    color={ft.MaterialState.DEFAULT: "white"},
+    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
+    color={CONTROL_STATE.DEFAULT: "white"},
 )
 
 try:
