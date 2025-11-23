@@ -81,6 +81,19 @@ class PDVController:
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=lambda _: self.atualizar_resumo(),
         )
+        self.saida_valor_field = ft.TextField(
+            label="Valor pago do caixa",
+            width=180,
+            value="0",
+            keyboard_type=ft.KeyboardType.NUMBER,
+            prefix_text="R$ ",
+        )
+        self.saida_descricao_field = ft.TextField(
+            label="Descrição da saída",
+            multiline=True,
+            min_lines=2,
+            max_lines=3,
+        )
         self.pagamento_dropdown = ft.Dropdown(
             label="Forma de pagamento (F9)",
             value="Dinheiro",
@@ -425,6 +438,7 @@ class PDVController:
                 valor=resultado["total"],
                 forma_pagamento=pagamentos[0]["forma"],
                 venda_id=resultado["id"],
+                descricao=f"Venda {resultado['codigo']}",
             )
         self.ultima_venda = resultado
         self.carrinho = []
@@ -462,6 +476,47 @@ class PDVController:
         self.carrinho = []
         self.atualizar_tabela()
         self.atualizar_resumo()
+
+    def registrar_pagamento_caixa(self, _=None):
+        caixa = caixa_models.caixa_aberto(session.user.id)
+        if not caixa:
+            self._mostrar_alerta(
+                "Nenhum caixa aberto para registrar a saída.", color=WARNING_COLOR
+            )
+            return
+
+        try:
+            valor = float((self.saida_valor_field.value or "0").replace(",", "."))
+        except ValueError:
+            valor = 0
+
+        descricao = (self.saida_descricao_field.value or "").strip()
+
+        if valor <= 0:
+            self._mostrar_alerta(
+                "Informe um valor maior que zero para registrar o pagamento.",
+                color=WARNING_COLOR,
+            )
+            return
+        if not descricao:
+            self._mostrar_alerta(
+                "Descreva o motivo da saída do caixa.", color=WARNING_COLOR
+            )
+            return
+
+        caixa_models.registrar_movimento(
+            caixa["id"],
+            tipo="saida_caixa",
+            valor=-abs(valor),
+            forma_pagamento="Dinheiro",
+            descricao=descricao,
+        )
+        self.saida_valor_field.value = "0"
+        self.saida_descricao_field.value = ""
+        self.page.update()
+        self._mostrar_alerta(
+            "Pagamento em dinheiro do caixa registrado.", color=SUCCESS_COLOR
+        )
 
     def atalhos(self, e: ft.KeyboardEvent):
         key = (e.key or "").replace(" ", "").upper()
@@ -567,6 +622,41 @@ class PDVController:
             ),
         )
 
+        pagamentos_caixa = ft.Container(
+            bgcolor=SURFACE,
+            border_radius=12,
+            padding=12,
+            content=ft.Column(
+                controls=[
+                    ft.Text(
+                        "Pagamentos com dinheiro do caixa",
+                        color="white70",
+                        weight=ft.FontWeight.BOLD,
+                    ),
+                    ft.Text(
+                        "Registre saídas pagas diretamente do caixa com uma breve descrição.",
+                        color="white60",
+                        size=12,
+                    ),
+                    ft.Row(
+                        controls=[
+                            self.saida_valor_field,
+                            ft.FilledButton(
+                                "Registrar saída",
+                                icon=ft.icons.SAVINGS,
+                                style=PRIMARY_BUTTON_STYLE,
+                                on_click=self.registrar_pagamento_caixa,
+                            ),
+                        ],
+                        spacing=10,
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    self.saida_descricao_field,
+                ],
+                spacing=8,
+            ),
+        )
+
         resumo = ft.Container(
             bgcolor=SURFACE,
             border_radius=12,
@@ -637,7 +727,7 @@ class PDVController:
                 ),
                 ft.Container(
                     ft.Column(
-                        [pagamentos, resumo, ultima],
+                        [pagamentos, resumo, ultima, pagamentos_caixa],
                         spacing=12,
                     ),
                     col={"xs": 12, "lg": 4},

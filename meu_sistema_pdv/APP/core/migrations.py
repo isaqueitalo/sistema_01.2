@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime
+from typing import Set
 
 from .config import get_config
 from .logger import get_logger
@@ -97,6 +98,7 @@ CREATE TABLE IF NOT EXISTS caixa_movimentos (
     tipo TEXT NOT NULL,
     forma_pagamento TEXT,
     valor REAL NOT NULL,
+    descricao TEXT,
     referencia_venda_id INTEGER,
     criado_em TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (caixa_id) REFERENCES caixas(id),
@@ -118,10 +120,23 @@ CREATE INDEX IF NOT EXISTS idx_clientes_nome ON clientes(nome);
 """
 
 
+def _ensure_column(
+    conn: sqlite3.Connection, table: str, column: str, column_type: str
+) -> None:
+    cursor = conn.execute(f"PRAGMA table_info({table})")
+    existing: Set[str] = {row[1] for row in cursor.fetchall()}
+    if column not in existing:
+        logger.info("Adicionando coluna %s à tabela %s", column, table)
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_type}")
+        conn.commit()
+
+
 def create_tables(conn: sqlite3.Connection) -> None:
     logger.debug("Aplicando script de criação de tabelas.")
     conn.executescript(CREATE_SCRIPT)
     conn.commit()
+
+    _ensure_column(conn, "caixa_movimentos", "descricao", "TEXT")
 
 
 def seed_initial_data(conn: sqlite3.Connection) -> None:

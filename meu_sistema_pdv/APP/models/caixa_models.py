@@ -46,13 +46,21 @@ def registrar_movimento(
     valor: float,
     forma_pagamento: str,
     venda_id: Optional[int] = None,
+    descricao: str | None = None,
 ) -> None:
     execute(
         """
-        INSERT INTO caixa_movimentos (caixa_id, tipo, valor, forma_pagamento, referencia_venda_id)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO caixa_movimentos (
+            caixa_id,
+            tipo,
+            valor,
+            forma_pagamento,
+            referencia_venda_id,
+            descricao
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
-        (caixa_id, tipo, valor, forma_pagamento, venda_id),
+        (caixa_id, tipo, valor, forma_pagamento, venda_id, descricao),
         commit=True,
     )
 
@@ -105,6 +113,32 @@ def relatorio_caixas(inicio: str, fim: str) -> List:
     )
 
 
+def total_saidas_periodo(inicio: str, fim: str) -> float:
+    row = execute(
+        """
+        SELECT COALESCE(SUM(valor), 0) AS total
+        FROM caixa_movimentos
+        WHERE tipo = 'saida_caixa' AND criado_em BETWEEN ? AND ?
+        """,
+        (inicio, fim),
+        fetchone=True,
+    )
+    return abs(float(row["total"] if row else 0))
+
+
+def saidas_por_periodo(inicio: str, fim: str) -> List:
+    return execute(
+        """
+        SELECT descricao, valor, criado_em
+        FROM caixa_movimentos
+        WHERE tipo = 'saida_caixa' AND criado_em BETWEEN ? AND ?
+        ORDER BY criado_em DESC
+        """,
+        (inicio, fim),
+        fetchall=True,
+    )
+
+
 __all__ = [
     "caixa_aberto",
     "abrir_caixa",
@@ -112,4 +146,6 @@ __all__ = [
     "total_por_forma",
     "fechar_caixa",
     "relatorio_caixas",
+    "total_saidas_periodo",
+    "saidas_por_periodo",
 ]

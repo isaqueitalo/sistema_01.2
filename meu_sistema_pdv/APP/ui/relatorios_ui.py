@@ -9,7 +9,7 @@ from APP.core.config import get_config
 from APP.core.logger import get_logger
 from APP.core.security import can_access
 from APP.core.utils import format_currency
-from APP.models import produtos_models, vendas_models
+from APP.models import caixa_models, produtos_models, vendas_models
 
 from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE, TEXT_MUTED
 
@@ -37,7 +37,9 @@ class RelatoriosView:
         self.total_text = ft.Text("R$ 0,00", size=26, weight=ft.FontWeight.BOLD)
         self.qtd_text = ft.Text("0", size=22)
         self.descontos_text = ft.Text("R$ 0,00", size=22)
+        self.saidas_total_text = ft.Text("R$ 0,00", size=22)
         self.pagamentos_list = ft.Column()
+        self.saidas_list = ft.Column()
         self.top_produtos_list = ft.Column()
         self.estoque_baixo = ft.Column()
         self.validade_list = ft.Column()
@@ -56,6 +58,8 @@ class RelatoriosView:
         qtd = vendas_models.quantidade_vendas_periodo(inicio, fim)
         descontos = vendas_models.total_descontos_periodo(inicio, fim)
         pagamentos = vendas_models.pagamentos_por_periodo(inicio, fim)
+        saidas_total = caixa_models.total_saidas_periodo(inicio, fim)
+        saidas = caixa_models.saidas_por_periodo(inicio, fim)
         top_produtos = vendas_models.produtos_mais_vendidos(inicio, fim, limite=5)
         estoque_baixo = produtos_models.produtos_estoque_baixo()
         validade = produtos_models.produtos_proximos_validade()
@@ -63,10 +67,17 @@ class RelatoriosView:
         self.total_text.value = format_currency(total)
         self.qtd_text.value = str(qtd)
         self.descontos_text.value = format_currency(descontos)
+        self.saidas_total_text.value = format_currency(saidas_total)
         self.pagamentos_list.controls = [
             ft.Text(f"{p['forma_pagamento']}: {format_currency(p['total'])}")
             for p in pagamentos
         ] or [ft.Text("Sem dados.", color=TEXT_MUTED)]
+        self.saidas_list.controls = [
+            ft.Text(
+                f"{format_currency(abs(p['valor']))} - {p['descricao'] or 'Saída em dinheiro'} ({p['criado_em']})"
+            )
+            for p in saidas
+        ] or [ft.Text("Nenhuma saída registrada.", color=TEXT_MUTED)]
         self.top_produtos_list.controls = [
             ft.Text(f"{p['nome']} - {p['quantidade']} un.")
             for p in top_produtos
@@ -93,6 +104,8 @@ class RelatoriosView:
         destino = Path(cfg.backup_dir) / f"relatorio_{date.today().isoformat()}.pdf"
         inicio, fim = self._range()
         pagamentos = vendas_models.pagamentos_por_periodo(inicio, fim)
+        saidas_total = caixa_models.total_saidas_periodo(inicio, fim)
+        saidas = caixa_models.saidas_por_periodo(inicio, fim)
         top_produtos = vendas_models.produtos_mais_vendidos(inicio, fim, limite=5)
         c = canvas.Canvas(str(destino), pagesize=A4)
         c.setFont("Helvetica-Bold", 16)
@@ -104,6 +117,15 @@ class RelatoriosView:
         y = 700
         for pag in pagamentos:
             c.drawString(60, y, f"{pag['forma_pagamento']}: {format_currency(pag['total'])}")
+            y -= 18
+        c.drawString(50, y, f"Saídas em dinheiro: {format_currency(saidas_total)}")
+        y -= 20
+        for saida in saidas:
+            c.drawString(
+                60,
+                y,
+                f"{format_currency(abs(saida['valor']))} - {saida['descricao'] or 'Saída em dinheiro'} ({saida['criado_em']})",
+            )
             y -= 18
         y -= 10
         c.drawString(50, y, "Top produtos:")
@@ -175,6 +197,24 @@ class RelatoriosView:
                     content=ft.Column(
                         controls=[ft.Text("Pagamentos"), self.pagamentos_list],
                         spacing=8,
+                    ),
+                    col={"sm": 12, "md": 6, "lg": 4},
+                ),
+                ft.Container(
+                    bgcolor=SURFACE,
+                    border_radius=12,
+                    padding=16,
+                    content=ft.Column(
+                        controls=[
+                            ft.Text("Pagamentos com dinheiro do caixa"),
+                            ft.Text(
+                                "Total pago em dinheiro:", color=TEXT_MUTED, size=12
+                            ),
+                            self.saidas_total_text,
+                            ft.Divider(),
+                            self.saidas_list,
+                        ],
+                        spacing=6,
                     ),
                     col={"sm": 12, "md": 6, "lg": 4},
                 ),
