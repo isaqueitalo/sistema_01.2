@@ -3,7 +3,17 @@ from __future__ import annotations
 import flet as ft
 
 # Compatibilidade entre versões do Flet
-CONTROL_STATE = ft.ControlState if hasattr(ft, "ControlState") else ft.MaterialState
+if hasattr(ft, "ControlState"):
+    CONTROL_STATE = ft.ControlState
+elif hasattr(ft, "MaterialState"):
+    CONTROL_STATE = ft.MaterialState
+else:
+    # Fallback mínimo para versões legadas, garantindo que os mapeamentos de estilo
+    # continuem funcionando mesmo sem enum de estado exposto pelo Flet.
+    class _ControlStateFallback:
+        DEFAULT = "default"
+
+    CONTROL_STATE = _ControlStateFallback
 
 PRIMARY_COLOR = "#0EA5E9"
 SECONDARY_COLOR = "#6366F1"
