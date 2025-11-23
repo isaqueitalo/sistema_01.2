@@ -28,6 +28,16 @@ python meu_sistema_pdv/main.py
 
 A aplicação abrirá no navegador padrão. Se preferir janela nativa, altere o parâmetro `view` do `ft.app` em `meu_sistema_pdv/main.py` conforme a documentação do Flet.
 
+## Como usar o arquivo `tests/test_pdv_keyboard.py`
+- Ele contém testes unitários focados no atalho de busca do PDV (navegação por setas, Enter e Escape).
+- Execute a partir da raiz do projeto:
+
+```bash
+python -m unittest tests/test_pdv_keyboard.py
+```
+
+Se todos os cenários de teclado estiverem funcionando, o comando finalizará sem erros.
+
 ## Onde validar as mudanças
 - A caixa de captura rápida no PDV agora responde às setas para navegar nas sugestões e à tecla Escape para fechá-las rapidamente (`meu_sistema_pdv/APP/ui/vendas_ui.py`).
 - Execute o fluxo de venda e digite no campo de busca rápida para verificar a navegação por teclado.
