@@ -1,7 +1,8 @@
 import os
 import sys
 import unittest
-from unittest.mock import MagicMock
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 PROJECT_DIR = os.path.join(ROOT_DIR, "meu_sistema_pdv")
@@ -23,6 +24,18 @@ class PDVAtalhoBuscaTests(unittest.TestCase):
         ctrl._confirmar_entrada = MagicMock()
         ctrl.ocultar_sugestoes = MagicMock()
         return ctrl
+
+    def test_on_change_skip_when_text_unchanged(self):
+        ctrl = self._build_controller()
+        ctrl.sugestoes_container = SimpleNamespace(visible=False)
+        ctrl.page = MagicMock()
+        ctrl.busca_field = SimpleNamespace(value="cafe")
+        ctrl._ultimo_texto_busca = "cafe"
+
+        with patch("APP.ui.vendas_ui.produtos_models.buscar_sugestoes") as buscar:
+            ctrl.atualizar_sugestoes()
+
+        buscar.assert_not_called()
 
     def test_arrow_down_moves_to_next_suggestion(self):
         ctrl = self._build_controller()

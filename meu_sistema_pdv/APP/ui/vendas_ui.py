@@ -61,6 +61,7 @@ class PDVController:
         )
         self.sugestoes_dados: List[dict] = []
         self.sugestoes_index: int = -1
+        self._ultimo_texto_busca: str = ""
         self.carrinho_list = ft.ListView(
             spacing=4,
             padding=0,
@@ -136,6 +137,9 @@ class PDVController:
 
     def atualizar_sugestoes(self):
         texto = (self.busca_field.value or "").strip()
+        if texto == self._ultimo_texto_busca:
+            return
+        self._ultimo_texto_busca = texto
         if len(texto) < 2:
             self.ocultar_sugestoes()
             return
@@ -157,6 +161,7 @@ class PDVController:
     def ocultar_sugestoes(self):
         self.sugestoes_dados = []
         self.sugestoes_index = -1
+        self._ultimo_texto_busca = ""
         if self.sugestoes_container.visible:
             self.sugestoes_container.visible = False
             self.page.update()
