@@ -83,5 +83,21 @@ class PDVAtalhoBuscaTests(unittest.TestCase):
         ctrl.ocultar_sugestoes.assert_not_called()
 
 
+class PDVSugestaoSelecionadaTests(unittest.TestCase):
+    def test_selecionar_sugestao_adiciona_item(self):
+        ctrl = object.__new__(PDVController)
+        ctrl.busca_field = SimpleNamespace(value="")
+        ctrl.ocultar_sugestoes = MagicMock()
+        ctrl.adicionar_item = MagicMock()
+
+        produto = {"codigo_barras": "123", "nome": "Café"}
+
+        ctrl.selecionar_sugestao(produto)
+
+        self.assertEqual(ctrl.busca_field.value, "123")
+        ctrl.ocultar_sugestoes.assert_called_once_with()
+        ctrl.adicionar_item.assert_called_once_with()
+
+
 if __name__ == "__main__":
     unittest.main()

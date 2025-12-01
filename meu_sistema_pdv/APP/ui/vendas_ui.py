@@ -182,6 +182,7 @@ class PDVController:
     def selecionar_sugestao(self, produto):
         self.busca_field.value = produto["codigo_barras"] or produto["nome"]
         self.ocultar_sugestoes()
+        self.adicionar_item()
 
     def ocultar_sugestoes(self):
         self.sugestoes_dados = []
