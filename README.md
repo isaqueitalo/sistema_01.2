@@ -38,6 +38,11 @@ python -m unittest tests/test_pdv_keyboard.py
 
 Se todos os cenários de teclado estiverem funcionando, o comando finalizará sem erros.
 
+## Não está encontrando o arquivo no VS Code?
+- O caminho completo é `sistema_01.2/tests/test_pdv_keyboard.py` (o arquivo fica na pasta `tests` na raiz do projeto).
+- No VS Code, abra a pasta `sistema_01.2` como workspace e expanda o diretório `tests` no Explorer para visualizar o arquivo.
+- Se estiver trabalhando em uma cópia antiga, faça `git pull` ou baixe novamente o repositório para garantir que o arquivo esteja presente.
+
 ## Onde validar as mudanças
 - A caixa de captura rápida no PDV agora responde às setas para navegar nas sugestões e à tecla Escape para fechá-las rapidamente (`meu_sistema_pdv/APP/ui/vendas_ui.py`).
 - Execute o fluxo de venda e digite no campo de busca rápida para verificar a navegação por teclado.
