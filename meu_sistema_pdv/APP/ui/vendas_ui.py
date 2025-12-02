@@ -826,8 +826,8 @@ class PDVController:
         self.page.on_keyboard_event = self.atalhos
         return ft.View(
             "/pdv",
-            controls=[ft.Container(ft.Column([cabecalho, layout], spacing=14), expand=True)],
-            scroll=ft.ScrollMode.AUTO,
+            controls=[ft.Container(ft.Column([cabecalho, layout], spacing=14))],
+            scroll=ft.ScrollMode.ADAPTIVE,
         )
 
     def _confirmar_entrada(self):
