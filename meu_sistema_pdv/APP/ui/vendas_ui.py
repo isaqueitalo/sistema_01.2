@@ -79,6 +79,7 @@ class PDVController:
             value="0",
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=lambda _: self.atualizar_resumo(),
+            on_focus=self._limpar_zero_on_focus,
         )
         self.saida_valor_field = ft.TextField(
             label="Valor pago do caixa",
@@ -86,6 +87,7 @@ class PDVController:
             value="0",
             keyboard_type=ft.KeyboardType.NUMBER,
             prefix_text="R$ ",
+            on_focus=self._limpar_zero_on_focus,
         )
         self.saida_descricao_field = ft.TextField(
             label="Descrição da saída",
@@ -99,6 +101,7 @@ class PDVController:
             value="0",
             keyboard_type=ft.KeyboardType.NUMBER,
             prefix_text="R$ ",
+            on_focus=self._limpar_zero_on_focus,
         )
         self.perda_descricao_field = ft.TextField(
             label="Explique a perda (extravio, dano, doação, etc.)",
@@ -136,6 +139,14 @@ class PDVController:
         self.total_text = ft.Text("R$ 0,00", size=24, weight=ft.FontWeight.BOLD)
         self.ultima_text = ft.Text("Nenhuma venda ainda.", color="white70")
         self.atualizar_lista_carrinho()
+
+    def _limpar_zero_on_focus(self, e: ft.ControlEvent):
+        """Remove o zero padrão ao focar um campo monetário."""
+
+        control = getattr(e, "control", None)
+        if control and (control.value or "").strip() == "0":
+            control.value = ""
+            control.update()
 
     def _carregar_clientes(self):
         clientes = clientes_models.listar_clientes()
