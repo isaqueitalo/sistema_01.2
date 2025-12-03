@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional
 
 from APP.core.database import execute, get_connection
@@ -48,6 +49,7 @@ def registrar_movimento(
     venda_id: Optional[int] = None,
     descricao: str | None = None,
 ) -> None:
+    agora = datetime.now().isoformat()
     execute(
         """
         INSERT INTO caixa_movimentos (
@@ -56,11 +58,12 @@ def registrar_movimento(
             valor,
             forma_pagamento,
             referencia_venda_id,
-            descricao
+            descricao,
+            criado_em
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-        (caixa_id, tipo, valor, forma_pagamento, venda_id, descricao),
+        (caixa_id, tipo, valor, forma_pagamento, venda_id, descricao, agora),
         commit=True,
     )
 
