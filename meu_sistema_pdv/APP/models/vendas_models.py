@@ -11,7 +11,6 @@ logger = get_logger()
 
 FORMAS_PAGAMENTO = [
     "Dinheiro",
-    "Cheque",
     "Cartão Crédito",
     "Cartão Débito",
     "PIX",
@@ -80,9 +79,7 @@ def registrar_venda(
                 (item["quantidade"], item["produto_id"]),
             )
 
-        pagamentos = pagamentos or [
-            {"forma": forma_principal or "Dinheiro", "valor": total_liquido}
-        ]
+        pagamentos = pagamentos or [{"forma": forma_principal or "Dinheiro", "valor": total_liquido}]
         for pagamento in pagamentos:
             cursor.execute(
                 """

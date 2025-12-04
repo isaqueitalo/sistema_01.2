@@ -1,0 +1,796 @@
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..351d75d959208ed92bb972832c5b9e621c4d8708
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,43 @@
++# Sistema PDV
++
++Este repositório já contém as alterações recentes na busca rápida do PDV (navegação por setas, Enter e tecla Escape para fechar sugestões). Use as instruções abaixo para rodar e testar.
++
++## Requisitos
++- Python 3.11+.
++- Dependências listadas em `meu_sistema_pdv/requirements.txt`.
++
++## Baixar o código
++Você pode usar qualquer IDE ou apenas o terminal. Basta ter o código localmente:
++
++- **Git:** `git clone <url-do-repositorio>` e depois `cd sistema_01.2`.
++- **ZIP:** baixe o arquivo compactado, extraia e abra a pasta `sistema_01.2` no terminal ou na IDE.
++
++## Instalação das dependências
++Com a pasta do projeto aberta (via terminal ou IDE), execute:
++
++```bash
++pip install -r meu_sistema_pdv/requirements.txt
++```
++
++## Como executar
++No mesmo diretório do projeto, inicie o PDV em modo navegador (padrão do Flet):
++
++```bash
++python meu_sistema_pdv/main.py
++```
++
++A aplicação abrirá no navegador padrão. Se preferir janela nativa, altere o parâmetro `view` do `ft.app` em `meu_sistema_pdv/main.py` conforme a documentação do Flet.
++
++## Como usar o arquivo `tests/test_pdv_keyboard.py`
++- Ele contém testes unitários focados no atalho de busca do PDV (navegação por setas, Enter e Escape).
++- Execute a partir da raiz do projeto:
++
++```bash
++python -m unittest tests/test_pdv_keyboard.py
++```
++
++Se todos os cenários de teclado estiverem funcionando, o comando finalizará sem erros.
++
++## Onde validar as mudanças
++- A caixa de captura rápida no PDV agora responde às setas para navegar nas sugestões e à tecla Escape para fechá-las rapidamente (`meu_sistema_pdv/APP/ui/vendas_ui.py`).
++- Execute o fluxo de venda e digite no campo de busca rápida para verificar a navegação por teclado.
+diff --git a/meu_sistema_pdv/APP/ui/caixa_ui.py b/meu_sistema_pdv/APP/ui/caixa_ui.py
+index e27111e1670939f5453f19b69afe399a9b0d7722..df94c2fff4e927a22b7c8dfcf34e15eeebea3765 100644
+--- a/meu_sistema_pdv/APP/ui/caixa_ui.py
++++ b/meu_sistema_pdv/APP/ui/caixa_ui.py
+@@ -1,41 +1,41 @@
+ from __future__ import annotations
+ 
+ from datetime import date
+ 
+ import flet as ft
+ 
+ from APP.core.security import can_access
+ from APP.core.session import session
+ from APP.core.utils import format_currency
+ from APP.models import caixa_models
+ 
+-from .style import PRIMARY_COLOR, SURFACE, WARNING_COLOR
++from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE, WARNING_COLOR
+ 
+ PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
+-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+-    color={ft.MaterialState.DEFAULT: "white"},
++    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
++    color={CONTROL_STATE.DEFAULT: "white"},
+ )
+ 
+ 
+ class CaixaView:
+     def __init__(self, page: ft.Page):
+         self.page = page
+         self.valor_abertura = ft.TextField(
+             label="Valor de abertura", keyboard_type=ft.KeyboardType.NUMBER
+         )
+         self.valor_fechamento = ft.TextField(
+             label="Valor contado no fechamento", keyboard_type=ft.KeyboardType.NUMBER
+         )
+         self.rel_inicio = ft.TextField(label="Período inicial", value=date.today().isoformat())
+         self.rel_fim = ft.TextField(label="Período final", value=date.today().isoformat())
+         self.relatorio_list = ft.Column()
+         self.formas_totais = ft.Column()
+         self.atualizar_estado()
+ 
+     def _toast(self, mensagem: str, cor: str = PRIMARY_COLOR):
+         self.page.snack_bar = ft.SnackBar(ft.Text(mensagem), bgcolor=cor)
+         self.page.snack_bar.open = True
+         self.page.update()
+ 
+     def atualizar_estado(self):
+         self.caixa_atual = caixa_models.caixa_aberto(session.user.id)
+diff --git a/meu_sistema_pdv/APP/ui/config_ui.py b/meu_sistema_pdv/APP/ui/config_ui.py
+index 5b5982be3bb3bff1d83e54adb040040e7c5f1df3..f360593b628afe3fd0d6d6916f6f3f2ee5dcaf36 100644
+--- a/meu_sistema_pdv/APP/ui/config_ui.py
++++ b/meu_sistema_pdv/APP/ui/config_ui.py
+@@ -1,39 +1,39 @@
+ from __future__ import annotations
+ 
+ import flet as ft
+ 
+ from APP.core import backup
+ from APP.core.config import get_config
+ from APP.core.database import execute
+ from APP.core.security import can_access
+ 
+-from .style import PRIMARY_COLOR, SURFACE
++from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE
+ 
+ PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
+-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+-    color={ft.MaterialState.DEFAULT: "white"},
++    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
++    color={CONTROL_STATE.DEFAULT: "white"},
+ )
+ 
+ 
+ def _obter_config_loja():
+     row = execute("SELECT * FROM configuracoes_loja WHERE id = 1", fetchone=True)
+     return row
+ 
+ 
+ def _salvar_config(dados):
+     execute(
+         """
+         UPDATE configuracoes_loja
+         SET nome = ?, cnpj = ?, endereco = ?, telefone = ?, logo = ?
+         WHERE id = 1
+         """,
+         (
+             dados["nome"],
+             dados["cnpj"],
+             dados["endereco"],
+             dados["telefone"],
+             dados["logo"],
+         ),
+         commit=True,
+     )
+ 
+diff --git a/meu_sistema_pdv/APP/ui/login_ui.py b/meu_sistema_pdv/APP/ui/login_ui.py
+index 66e265df1dcbdf7e5360c83a9393d34c93b7148c..d3da201dab48fc6ed766365fcdb258426044b04b 100644
+--- a/meu_sistema_pdv/APP/ui/login_ui.py
++++ b/meu_sistema_pdv/APP/ui/login_ui.py
+@@ -1,78 +1,78 @@
+ from __future__ import annotations
+ 
+ import flet as ft
+ 
+ from APP.core.logger import get_logger
+ from APP.core.session import session
+ from APP.models import usuarios_models
+ 
+-from .style import BACKGROUND, PRIMARY_COLOR, SURFACE
++from .style import BACKGROUND, CONTROL_STATE, PRIMARY_COLOR, SURFACE
+ 
+ logger = get_logger()
+ 
+ 
+ def build_login_view(page: ft.Page, on_success) -> ft.View:
+     username = ft.TextField(
+         label="Usuário",
+         autofocus=True,
+         color="white",
+         border_radius=12,
+     )
+     password = ft.TextField(
+         label="Senha",
+         password=True,
+         can_reveal_password=True,
+         color="white",
+         border_radius=12,
+         on_submit=lambda _: autenticar(None),
+     )
+     feedback = ft.Text("", color="red")
+ 
+     def autenticar(evt):
+         usuario = usuarios_models.autenticar(username.value.strip(), password.value)
+         if usuario:
+             session.login(usuario)
+             feedback.value = ""
+             page.snack_bar = ft.SnackBar(ft.Text("Login realizado!"), bgcolor=PRIMARY_COLOR)
+             page.snack_bar.open = True
+             page.update()
+             logger.info("Login bem-sucedido para %s", usuario["username"])
+             on_success()
+         else:
+             feedback.value = "Usuário ou senha inválidos."
+             password.value = ""
+             page.update()
+ 
+     entrar_btn = ft.ElevatedButton(
+         text="Entrar",
+         icon=ft.icons.LOGIN,
+         on_click=autenticar,
+         style=ft.ButtonStyle(
+-            bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+-            color={ft.MaterialState.DEFAULT: "white"},
+-            shape={ft.MaterialState.DEFAULT: ft.RoundedRectangleBorder(radius=12)},
++            bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
++            color={CONTROL_STATE.DEFAULT: "white"},
++            shape={CONTROL_STATE.DEFAULT: ft.RoundedRectangleBorder(radius=12)},
+         ),
+     )
+ 
+     card = ft.Container(
+         width=420,
+         padding=30,
+         bgcolor=SURFACE,
+         border_radius=16,
+         content=ft.Column(
+             controls=[
+                 ft.Text("Meu Sistema PDV", size=26, weight=ft.FontWeight.BOLD),
+                 ft.Text("Acesse com suas credenciais", color="gray"),
+                 username,
+                 password,
+                 entrar_btn,
+                 feedback,
+             ],
+             spacing=16,
+             tight=True,
+         ),
+     )
+ 
+     return ft.View(
+         "/",
+         bgcolor=BACKGROUND,
+diff --git a/meu_sistema_pdv/APP/ui/produtos_ui.py b/meu_sistema_pdv/APP/ui/produtos_ui.py
+index 018fcb5d5c10fefe02e5c418f9fe4f228e33c92d..62a28c3113597fefe4ba79ed61584b84a36d529a 100644
+--- a/meu_sistema_pdv/APP/ui/produtos_ui.py
++++ b/meu_sistema_pdv/APP/ui/produtos_ui.py
+@@ -1,41 +1,41 @@
+ from __future__ import annotations
+ 
+ from typing import Optional
+ 
+ import flet as ft
+ 
+ from APP.core.logger import get_logger
+ from APP.core.session import session
+ from APP.core.security import can_access
+ from APP.models import produtos_models
+ 
+-from .style import PRIMARY_COLOR, SURFACE, WARNING_COLOR
++from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE, WARNING_COLOR
+ 
+ PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
+-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+-    color={ft.MaterialState.DEFAULT: "white"},
++    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
++    color={CONTROL_STATE.DEFAULT: "white"},
+ )
+ 
+ logger = get_logger()
+ 
+ 
+ class ProdutosView:
+     def __init__(self, page: ft.Page):
+         self.page = page
+         self.somente_consulta = session.has_role("vendedor") and not session.has_role(
+             "gerente", "admin"
+         )
+         self.produto_id: Optional[int] = None
+         self.busca_field = ft.TextField(
+             label="Buscar por nome ou código",
+             prefix_icon=ft.icons.SEARCH,
+             on_change=lambda _: self.carregar_produtos(),
+         )
+         self.nome = ft.TextField(label="Nome do produto", expand=2)
+         self.preco = ft.TextField(
+             label="Preço de venda", keyboard_type=ft.KeyboardType.NUMBER
+         )
+         self.estoque = ft.TextField(
+             label="Estoque atual", keyboard_type=ft.KeyboardType.NUMBER
+         )
+         self.estoque_minimo = ft.TextField(
+diff --git a/meu_sistema_pdv/APP/ui/relatorios_ui.py b/meu_sistema_pdv/APP/ui/relatorios_ui.py
+index 1fc4de25eafa12bc60ac7ff6ce3b9b50ffe65a4d..5a38d8be2060ec143d2040266bcaa04eae746007 100644
+--- a/meu_sistema_pdv/APP/ui/relatorios_ui.py
++++ b/meu_sistema_pdv/APP/ui/relatorios_ui.py
+@@ -1,43 +1,43 @@
+ from __future__ import annotations
+ 
+ from datetime import date
+ from pathlib import Path
+ 
+ import flet as ft
+ 
+ from APP.core.config import get_config
+ from APP.core.logger import get_logger
+ from APP.core.security import can_access
+ from APP.core.utils import format_currency
+ from APP.models import produtos_models, vendas_models
+ 
+-from .style import PRIMARY_COLOR, SURFACE, TEXT_MUTED
++from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE, TEXT_MUTED
+ 
+ PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
+-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+-    color={ft.MaterialState.DEFAULT: "white"},
++    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
++    color={CONTROL_STATE.DEFAULT: "white"},
+ )
+ 
+ try:
+     from reportlab.lib.pagesizes import A4
+     from reportlab.pdfgen import canvas
+ except Exception:  # pragma: no cover
+     A4 = None
+     canvas = None
+ 
+ logger = get_logger()
+ 
+ 
+ class RelatoriosView:
+     def __init__(self, page: ft.Page):
+         hoje = date.today().isoformat()
+         self.page = page
+         self.inicio = ft.TextField(label="Data inicial (YYYY-MM-DD)", value=hoje)
+         self.fim = ft.TextField(label="Data final (YYYY-MM-DD)", value=hoje)
+         self.total_text = ft.Text("R$ 0,00", size=26, weight=ft.FontWeight.BOLD)
+         self.qtd_text = ft.Text("0", size=22)
+         self.descontos_text = ft.Text("R$ 0,00", size=22)
+         self.pagamentos_list = ft.Column()
+         self.top_produtos_list = ft.Column()
+         self.estoque_baixo = ft.Column()
+         self.validade_list = ft.Column()
+diff --git a/meu_sistema_pdv/APP/ui/style.py b/meu_sistema_pdv/APP/ui/style.py
+index 5075a5bb87a1c80f4471e2c2030e959cbf7d6155..e645836561f47349a18f5e3750ccbe258b65d550 100644
+--- a/meu_sistema_pdv/APP/ui/style.py
++++ b/meu_sistema_pdv/APP/ui/style.py
+@@ -1,68 +1,82 @@
+ from __future__ import annotations
+ 
+ import flet as ft
+ 
++# Compatibilidade entre versões do Flet
++if hasattr(ft, "ControlState"):
++    CONTROL_STATE = ft.ControlState
++elif hasattr(ft, "MaterialState"):
++    CONTROL_STATE = ft.MaterialState
++else:
++    # Fallback mínimo para versões legadas, garantindo que os mapeamentos de estilo
++    # continuem funcionando mesmo sem enum de estado exposto pelo Flet.
++    class _ControlStateFallback:
++        DEFAULT = "default"
++
++    CONTROL_STATE = _ControlStateFallback
++
+ PRIMARY_COLOR = "#0EA5E9"
+ SECONDARY_COLOR = "#6366F1"
+ SUCCESS_COLOR = "#22C55E"
+ WARNING_COLOR = "#F59E0B"
+ ERROR_COLOR = "#EF4444"
+ BACKGROUND = "#0F172A"
+ SURFACE = "#1E293B"
+ TEXT_MUTED = "#94A3B8"
+ 
+ 
+ def apply_theme(page: ft.Page) -> None:
+     page.theme_mode = ft.ThemeMode.DARK
+     page.title = "Meu Sistema PDV"
+     page.padding = 20
+     page.bgcolor = BACKGROUND
+     page.update()
+ 
+ 
+ def build_card(title: str, value: str, icon: str, color: str = PRIMARY_COLOR) -> ft.Container:
+     return ft.Container(
+         bgcolor=SURFACE,
+         border_radius=12,
+         padding=16,
+         content=ft.Column(
+             controls=[
+                 ft.Row(
+                     controls=[
+                         ft.Icon(icon, color=color, size=32),
+                         ft.Text(title, color=TEXT_MUTED, weight=ft.FontWeight.W_500),
+                     ],
+                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                 ),
+                 ft.Text(value, size=28, weight=ft.FontWeight.BOLD, color="white"),
+             ],
+             spacing=10,
+         ),
+     )
+ 
+ 
+ def action_button(label: str, icon: str, on_click) -> ft.ElevatedButton:
+     return ft.ElevatedButton(
+         text=label,
+         icon=icon,
+         style=ft.ButtonStyle(
+-            bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+-            color={ft.MaterialState.DEFAULT: "white"},
+-            shape={ft.MaterialState.DEFAULT: ft.RoundedRectangleBorder(radius=12)},
++            bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
++            color={CONTROL_STATE.DEFAULT: "white"},
++            shape={CONTROL_STATE.DEFAULT: ft.RoundedRectangleBorder(radius=12)},
+         ),
+         on_click=on_click,
+     )
+ 
+ 
+ __all__ = [
+     "apply_theme",
+     "build_card",
+     "action_button",
+     "PRIMARY_COLOR",
+     "SECONDARY_COLOR",
+     "SUCCESS_COLOR",
+     "WARNING_COLOR",
+     "ERROR_COLOR",
+     "SURFACE",
+     "TEXT_MUTED",
++    "CONTROL_STATE",
+ ]
+diff --git a/meu_sistema_pdv/APP/ui/usuarios_ui.py b/meu_sistema_pdv/APP/ui/usuarios_ui.py
+index 02fd38f9d976dd048af9bf4a80b4c4242654b774..653e783bde74d4031872dd8821c55b7871de6624 100644
+--- a/meu_sistema_pdv/APP/ui/usuarios_ui.py
++++ b/meu_sistema_pdv/APP/ui/usuarios_ui.py
+@@ -1,39 +1,39 @@
+ from __future__ import annotations
+ 
+ from typing import Optional
+ 
+ import flet as ft
+ 
+ from APP.core.security import can_access
+ from APP.models import usuarios_models
+ 
+-from .style import PRIMARY_COLOR, SURFACE, WARNING_COLOR
++from .style import CONTROL_STATE, PRIMARY_COLOR, SURFACE, WARNING_COLOR
+ 
+ PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
+-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+-    color={ft.MaterialState.DEFAULT: "white"},
++    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
++    color={CONTROL_STATE.DEFAULT: "white"},
+ )
+ 
+ 
+ class UsuariosView:
+     def __init__(self, page: ft.Page):
+         self.page = page
+         self.usuario_id: Optional[int] = None
+         self.nome = ft.TextField(label="Nome completo")
+         self.username = ft.TextField(label="Usuário")
+         self.senha = ft.TextField(label="Senha", password=True, can_reveal_password=True)
+         self.role = ft.Dropdown(
+             label="Papel",
+             options=[
+                 ft.dropdown.Option("admin", "Administrador"),
+                 ft.dropdown.Option("gerente", "Gerente"),
+                 ft.dropdown.Option("vendedor", "Vendedor"),
+             ],
+         )
+         self.tabela = ft.DataTable(
+             bgcolor=SURFACE,
+             column_spacing=12,
+             columns=[
+                 ft.DataColumn(ft.Text("Nome")),
+                 ft.DataColumn(ft.Text("Usuário")),
+                 ft.DataColumn(ft.Text("Papel")),
+diff --git a/meu_sistema_pdv/APP/ui/vendas_ui.py b/meu_sistema_pdv/APP/ui/vendas_ui.py
+index 68db9f444fc2a7a9f97675bfce7e4c18e8be806a..f278eb17e12c4b176689061cfbbb51e2ed79716e 100644
+--- a/meu_sistema_pdv/APP/ui/vendas_ui.py
++++ b/meu_sistema_pdv/APP/ui/vendas_ui.py
+@@ -1,86 +1,89 @@
+ from __future__ import annotations
+ 
+ from datetime import datetime
+ from typing import List, Optional
+ 
+ import flet as ft
+ 
+ from APP.core.logger import get_logger
+ from APP.core.security import can_access
+ from APP.core.session import session
+ from APP.core.utils import format_currency
+ from APP.models import (
+     caixa_models,
+     clientes_models,
+     produtos_models,
+     vendas_models,
+ )
+ 
+ from .style import (
++    CONTROL_STATE,
+     PRIMARY_COLOR,
+     SECONDARY_COLOR,
+     SURFACE,
+     SUCCESS_COLOR,
+     WARNING_COLOR,
+ )
+ 
+ PRIMARY_BUTTON_STYLE = ft.ButtonStyle(
+-    bgcolor={ft.MaterialState.DEFAULT: PRIMARY_COLOR},
+-    color={ft.MaterialState.DEFAULT: "white"},
++    bgcolor={CONTROL_STATE.DEFAULT: PRIMARY_COLOR},
++    color={CONTROL_STATE.DEFAULT: "white"},
+ )
+ SECONDARY_BUTTON_STYLE = ft.ButtonStyle(
+-    bgcolor={ft.MaterialState.DEFAULT: SECONDARY_COLOR},
+-    color={ft.MaterialState.DEFAULT: "white"},
++    bgcolor={CONTROL_STATE.DEFAULT: SECONDARY_COLOR},
++    color={CONTROL_STATE.DEFAULT: "white"},
+ )
+ 
+ logger = get_logger()
+ 
+ 
+ class PDVController:
+     def __init__(self, page: ft.Page, on_back) -> None:
+         self.page = page
+         self.on_back = on_back
+         self.carrinho: List[dict] = []
+         self.ultima_venda: Optional[dict] = None
+         self.busca_field = ft.TextField(
+             label="Código de barras ou nome",
+             autofocus=True,
+             border_radius=12,
+-            on_submit=lambda _: self.adicionar_item(),
++            on_submit=lambda _: self._confirmar_entrada(),
+             on_change=lambda e: self.atualizar_sugestoes(),
++            on_key_down=self._atalho_busca,
+         )
+         self.sugestoes_lista = ft.Column(spacing=0)
+         self.sugestoes_container = ft.Container(
+             content=self.sugestoes_lista,
+             bgcolor=SURFACE,
+             border_radius=8,
+             visible=False,
+             padding=0,
+         )
+         self.sugestoes_dados: List[dict] = []
+         self.sugestoes_index: int = -1
++        self._ultimo_texto_busca: str = ""
+         self.carrinho_list = ft.ListView(
+             spacing=4,
+             padding=0,
+             expand=True,
+             auto_scroll=False,
+         )
+         self.quantidade_field = ft.TextField(
+             label="Qtd",
+             width=120,
+             value="1",
+             on_submit=lambda _: self.adicionar_item(),
+         )
+         self.desconto_field = ft.TextField(
+             label="Desconto (R$)",
+             width=150,
+             value="0",
+             keyboard_type=ft.KeyboardType.NUMBER,
+             on_change=lambda _: self.atualizar_resumo(),
+         )
+         self.pagamento_dropdown = ft.Dropdown(
+             label="Forma de pagamento (F9)",
+             value="Dinheiro",
+             options=[ft.dropdown.Option(p) for p in vendas_models.FORMAS_PAGAMENTO],
+             border_radius=12,
+         )
+@@ -112,112 +115,134 @@ class PDVController:
+     def _carregar_clientes(self):
+         clientes = clientes_models.listar_clientes()
+         self.cliente_dropdown.options = [
+             ft.dropdown.Option(str(c["id"]), c["nome"]) for c in clientes
+         ]
+         consumidor = next((c for c in clientes if c["nome"] == "Consumidor Final"), None)
+         if consumidor:
+             self.cliente_dropdown.value = str(consumidor["id"])
+ 
+     def _mostrar_alerta(self, mensagem: str, color: str = WARNING_COLOR):
+         self.page.snack_bar = ft.SnackBar(ft.Text(mensagem), bgcolor=color)
+         self.page.snack_bar.open = True
+         self.page.update()
+ 
+     def _produto_por_busca(self, texto: str):
+         texto = texto.strip()
+         if not texto:
+             return None
+         produto = produtos_models.buscar_por_codigo(texto)
+         if produto:
+             return produto
+         return produtos_models.buscar_por_nome(texto)
+ 
+     def atualizar_sugestoes(self):
+         texto = (self.busca_field.value or "").strip()
++        if texto == self._ultimo_texto_busca:
++            return
++        self._ultimo_texto_busca = texto
+         if len(texto) < 2:
+             self.ocultar_sugestoes()
+             return
+         resultados = produtos_models.buscar_sugestoes(texto, limite=6)
+         if not resultados:
+             self.ocultar_sugestoes()
+             return
+ 
+         self.sugestoes_dados = resultados
+         self.sugestoes_index = 0
+         self._renderizar_sugestoes()
+         self.sugestoes_container.visible = True
+         self.page.update()
+ 
+     def selecionar_sugestao(self, produto):
+         self.busca_field.value = produto["codigo_barras"] or produto["nome"]
+         self.ocultar_sugestoes()
+ 
+     def ocultar_sugestoes(self):
+         self.sugestoes_dados = []
+         self.sugestoes_index = -1
++        self._ultimo_texto_busca = ""
+         if self.sugestoes_container.visible:
+             self.sugestoes_container.visible = False
+             self.page.update()
+ 
+     def _renderizar_sugestoes(self):
+         controles = []
+         for idx, produto in enumerate(self.sugestoes_dados):
+             selecionado = idx == self.sugestoes_index
+             controles.append(
+                 ft.Container(
+                     bgcolor="#1f2937" if selecionado else None,
+                     border_radius=6,
+                     padding=8,
+                     on_click=lambda e, p=produto: self.selecionar_sugestao(p),
+                     content=ft.Column(
+                         controls=[
+                             ft.Text(produto["nome"], weight=ft.FontWeight.BOLD),
+                             ft.Text(
+                                 f"Cód: {produto['codigo_barras'] or '-'} • {format_currency(produto['preco_venda'])}",
+                                 size=12,
+                                 color="white70",
+                             ),
+                         ],
+                         spacing=2,
+                     ),
+                 )
+             )
+         self.sugestoes_lista.controls = controles
+ 
+     def mover_sugestao(self, delta: int):
+         if not self.sugestoes_dados:
+             return
+         self.sugestoes_index = (self.sugestoes_index + delta) % len(self.sugestoes_dados)
+         self._renderizar_sugestoes()
+         self.page.update()
+ 
+     def aplicar_sugestao_atual(self):
+         if not self.sugestoes_dados or self.sugestoes_index < 0:
+             return
+         self.selecionar_sugestao(self.sugestoes_dados[self.sugestoes_index])
+ 
++    def _atalho_busca(self, e: ft.KeyboardEvent):
++        """Permite navegar nas sugestões e confirmar pelo teclado.
++
++        Esta função fica isolada para evitar problemas de indentação e
++        padronizar o tratamento das teclas, já que o Flet envia os nomes
++        das teclas com ou sem espaços dependendo do sistema operacional.
++        """
++
++        key = (e.key or "").replace(" ", "").upper()
++        if key in ("ARROWDOWN", "DOWN"):
++            self.mover_sugestao(1)
++        elif key in ("ARROWUP", "UP"):
++            self.mover_sugestao(-1)
++        elif key in ("ENTER", "NUMPADENTER"):
++            self._confirmar_entrada()
++        elif key in ("ESCAPE", "ESC"):
++            self.ocultar_sugestoes()
++
+     def atualizar_lista_carrinho(self):
+         if not self.carrinho:
+             self.carrinho_list.controls = [
+                 ft.Text("Nenhum produto no carrinho.", color="white70")
+             ]
+         else:
+             itens = []
+             for item in self.carrinho:
+                 itens.append(
+                     ft.ListTile(
+                         title=ft.Text(item["nome"]),
+                         subtitle=ft.Text(
+                             f"Qtd: {item['quantidade']:.2f} x {format_currency(item['preco_unitario'])}"
+                         ),
+                         trailing=ft.Text(
+                             format_currency(item["quantidade"] * item["preco_unitario"])
+                         ),
+                         dense=True,
+                     )
+                 )
+             self.carrinho_list.controls = itens
+ 
+     def adicionar_item(self):
+         produto = self._produto_por_busca(self.busca_field.value or "")
+         if not produto:
+diff --git a/tests/test_pdv_keyboard.py b/tests/test_pdv_keyboard.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..47f020c917e0676c69e4dfd528a2cd2406180c2a
+--- /dev/null
++++ b/tests/test_pdv_keyboard.py
+@@ -0,0 +1,87 @@
++import os
++import sys
++import unittest
++from types import SimpleNamespace
++from unittest.mock import MagicMock, patch
++
++ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
++PROJECT_DIR = os.path.join(ROOT_DIR, "meu_sistema_pdv")
++if PROJECT_DIR not in sys.path:
++    sys.path.insert(0, PROJECT_DIR)
++
++from APP.ui.vendas_ui import PDVController
++
++
++class DummyEvent:
++    def __init__(self, key: str | None):
++        self.key = key
++
++
++class PDVAtalhoBuscaTests(unittest.TestCase):
++    def _build_controller(self):
++        ctrl = object.__new__(PDVController)
++        ctrl.mover_sugestao = MagicMock()
++        ctrl._confirmar_entrada = MagicMock()
++        ctrl.ocultar_sugestoes = MagicMock()
++        return ctrl
++
++    def test_on_change_skip_when_text_unchanged(self):
++        ctrl = self._build_controller()
++        ctrl.sugestoes_container = SimpleNamespace(visible=False)
++        ctrl.page = MagicMock()
++        ctrl.busca_field = SimpleNamespace(value="cafe")
++        ctrl._ultimo_texto_busca = "cafe"
++
++        with patch("APP.ui.vendas_ui.produtos_models.buscar_sugestoes") as buscar:
++            ctrl.atualizar_sugestoes()
++
++        buscar.assert_not_called()
++
++    def test_arrow_down_moves_to_next_suggestion(self):
++        ctrl = self._build_controller()
++
++        ctrl._atalho_busca(DummyEvent("Arrow Down"))
++
++        ctrl.mover_sugestao.assert_called_once_with(1)
++        ctrl._confirmar_entrada.assert_not_called()
++        ctrl.ocultar_sugestoes.assert_not_called()
++
++    def test_arrow_up_moves_to_previous_suggestion(self):
++        ctrl = self._build_controller()
++
++        ctrl._atalho_busca(DummyEvent("Arrow Up"))
++
++        ctrl.mover_sugestao.assert_called_once_with(-1)
++        ctrl._confirmar_entrada.assert_not_called()
++        ctrl.ocultar_sugestoes.assert_not_called()
++
++    def test_enter_confirms_current_suggestion(self):
++        ctrl = self._build_controller()
++
++        ctrl._atalho_busca(DummyEvent("Enter"))
++
++        ctrl._confirmar_entrada.assert_called_once_with()
++        ctrl.mover_sugestao.assert_not_called()
++        ctrl.ocultar_sugestoes.assert_not_called()
++
++    def test_escape_hides_suggestions(self):
++        ctrl = self._build_controller()
++
++        ctrl._atalho_busca(DummyEvent("Esc"))
++
++        ctrl.ocultar_sugestoes.assert_called_once_with()
++        ctrl.mover_sugestao.assert_not_called()
++        ctrl._confirmar_entrada.assert_not_called()
++
++    def test_unhandled_key_does_nothing(self):
++        ctrl = self._build_controller()
++
++        ctrl._atalho_busca(DummyEvent("Space"))
++
++        ctrl.mover_sugestao.assert_not_called()
++        ctrl._confirmar_entrada.assert_not_called()
++        ctrl.ocultar_sugestoes.assert_not_called()
++
++
++if __name__ == "__main__":
++    unittest.main()
